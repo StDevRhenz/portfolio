@@ -11,6 +11,9 @@
 # production
 /build
 
+# practiceFiles
+/practiceFiles
+
 # misc
 .DS_Store
 .env.local
