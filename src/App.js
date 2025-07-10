@@ -14,11 +14,9 @@ import './App.css';
 function App() {
   return (
   <div>
-
     <nav>
       <Navbar />
     </nav>
-
     <section id='home'>
       <Home />  
     </section>
