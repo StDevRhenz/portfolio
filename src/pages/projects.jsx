@@ -1,6 +1,6 @@
 function projects(){
     return(
-        <div className="bg-black bg-opacity-90 min-h-screen flex flex-col items-center justify-center text-[calc(10px+2vmin)]">
+        <div className="">
             <h1 className="text-white text-4xl font-bold">About projects</h1>
             <p className="text-white mt-4">This is the projects page of the portfolio.</p>
         </div>
