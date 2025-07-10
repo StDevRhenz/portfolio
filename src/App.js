@@ -23,13 +23,16 @@ function App() {
       <Home />  
     </section>
 
-    
-    {/* <section id='about'>
+    <section id='about'>
       <About />
     </section>
 
     <section id='certificates'>
       <Certificates />
+    </section>
+
+    {/* <section id='skills'>
+      <Skills />
     </section>
 
     <section id='projects'>
@@ -38,14 +41,12 @@ function App() {
 
     <section id='contact'>
       <Contact />
-    </section>
+    </section> */}
 
-    <section id='skills'>
-      <Skills />
-    </section>
+
     
     
-    */}
+   
 
     </div>
   );
