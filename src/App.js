@@ -6,6 +6,7 @@ import About from './pages/about';
 import Certificates from './pages/certificates';
 import Projects from './pages/projects';
 import Contact from './pages/contact';
+import Skills from './pages/skills';
 
 import Home from './pages/home';
 
@@ -17,11 +18,13 @@ function App() {
     <nav>
       <Navbar />
     </nav>
+    
     <section id='home'>
       <Home />  
     </section>
 
-    <section id='about'>
+    
+    {/* <section id='about'>
       <About />
     </section>
 
@@ -36,6 +39,13 @@ function App() {
     <section id='contact'>
       <Contact />
     </section>
+
+    <section id='skills'>
+      <Skills />
+    </section>
+    
+    
+    */}
 
     </div>
   );
