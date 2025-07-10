@@ -1,3 +1,26 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* section {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #4CAF50;
+    font-size: 100px;
+    color: #fff;
+    font-weight: bold;
+} */
+
+nav a:hover {
+    background-color: #575757;
+}
+
+nav a.active {
+    background-color: #4CAF50; /* Green */
+}
