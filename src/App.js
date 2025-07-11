@@ -33,13 +33,13 @@ function App() {
 
     {/* <section id='skills'>
       <Skills />
-    </section>
+    </section> */}
 
     <section id='projects'>
       <Projects />
     </section>
 
-    <section id='contact'>
+    {/* <section id='contact'>
       <Contact />
     </section> */}
 
