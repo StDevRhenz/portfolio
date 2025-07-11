@@ -11,7 +11,7 @@ function about() {
                         About <span className="font-medium">Me</span>
                     </h1>
                     
-                    <div className="bg-black bg-opacity-50 p-8 lg:p-12 rounded-lg border border-gray-700 justify-text-center">
+                    <div className="bg-black bg-opacity-50 p-8 lg:p-12 rounded-lg border border-gray-700 justify-text-center ">
                         <div className="space-y-6 text-justify">
                             <p className="text-lg lg:text-xl text-gray-300 leading-relaxed font-light">
                                 I'm currently a <span className="font-medium text-white">Computer Science student</span> at the{' '}
@@ -23,13 +23,13 @@ function about() {
                                 >
                                     University of Makati,
                                 </a>{' '}
-                                Philippines with a passion for software development, applications, engineering, and AI.
+                                Philippines with a passion for software development, applications, engineering, and AI. <b className='font-medium text-white underline'>I'm still exploring which path in tech fits me best.</b>
                             </p>
                             
                             <p className="text-lg lg:text-xl text-gray-300 leading-relaxed font-light">
                                 I started my journey in programming in <span className="font-medium text-white">2021</span>. 
                                 These experiences have equipped me with a solid foundation in different programming 
-                                languages and frameworks.
+                                languages and frameworks. 
                             </p>
                             
                             <p className="text-lg lg:text-xl text-gray-300 leading-relaxed font-light">
