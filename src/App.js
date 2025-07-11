@@ -33,7 +33,7 @@ function App() {
 
     {/* <section id='skills'>
       <Skills />
-    </section>
+    </section> */}
 
     <section id='projects'>
       <Projects />
@@ -41,7 +41,9 @@ function App() {
 
     <section id='contact'>
       <Contact />
-    </section> */}
+    </section>
+
+
 
 
     
