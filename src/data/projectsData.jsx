@@ -8,10 +8,11 @@ export const projectsData = [
     title: 'Unspoken Letter',
     category: 'Websites',
     image: UnspokenLetter,
-    tech: ['Typescript', 'Javascript', 'Supabase', 'React'],
+    tech: ['TypeScript', 'JavaScript', 'Supabase', 'React'],
     description: 'This UnspokenLetter is a platform where users can write letter and allows users to reflect on their current thoughts and feelings, and revisit them later.',
     liveUrl: 'https://unspokenletter.vercel.app',
-    codeUrl: 'https://github.com/StDevRhenz/unspokenletter'
+    codeUrl: 'https://github.com/StDevRhenz/unspokenletter',
+    status: 'In Progress' // 'Done', 'Pending', 'In Progress'
   },
   {
     id: 2,
@@ -21,7 +22,8 @@ export const projectsData = [
     tech: ['React Native', 'Tailwind CSS', 'TypeScript', 'Expo'],
     description: 'A simple calculator app with Different Feature like Scientific Calculator, Standard Calculator, Units Converter, and more.',
     liveUrl: 'https://expo.dev/accounts/rhenz/projects/calculator/builds/f60ccecf-2774-4818-b5b4-5bde2bd8f7c5?fbclid=IwY2xjawLknYVleHRuA2FlbQIxMABicmlkETFDcDh6RVRLWHU3aWtOc0dwAR5uhDsuc7ap_3kj2334nAcleoC1s_wTxdmskDoXN4T7br6z13AnX-aBZ5G4Dg_aem_h5Xn_C0SNO0gWxmKzKU0aA',
-    codeUrl: 'https://github.com/StDevRhenz/Calculator'
+    codeUrl: 'https://github.com/StDevRhenz/Calculator',
+    status: 'Done' // 'Done', 'Pending', 'In Progress'
   },
 //   {
 //     id: 3,
