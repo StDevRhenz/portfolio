@@ -1,6 +1,6 @@
 
 
-// export const projectsData = [
+export const projectsData = [
 //   {
 //     id: 1,
 //     title: 'Project Title 1',
@@ -51,6 +51,6 @@
 //     liveUrl: '#',
 //     codeUrl: '#'
 //   }
-// ];
+];
 
-// export const projectCategories = ['All', 'Web App', 'Mobile App', 'Desktop App'];
+export const projectCategories = ['All', 'Websites', 'Mobile Application', 'Desktop Application'];
