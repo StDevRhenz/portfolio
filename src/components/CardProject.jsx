@@ -16,7 +16,7 @@ function Card({ project }) {
                 </h3>
 
                 <p className="text-sm text-gray-300 leading-relaxed">
-                    Brief description of {project.title}.
+                    {project.description}
                 </p>
 
                 <div className="space-y-2">
@@ -32,13 +32,17 @@ function Card({ project }) {
 
                 <div className="flex gap-3 pt-2">
                     <a
-                        href="#"
+                        href={project.liveUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="flex-1 inline-flex items-center justify-center px-4 py-2 bg-white text-black text-sm font-light rounded-lg hover:bg-gray-200 transition-colors duration-300"
                     >
                         Live Demo
                     </a>
                     <a
-                        href="#"
+                        href={project.codeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="flex-1 inline-flex items-center justify-center px-4 py-2 border border-white text-white text-sm font-light rounded-lg hover:bg-white hover:text-black transition-colors duration-300"
                     >
                         View Code
