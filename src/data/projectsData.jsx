@@ -1,16 +1,17 @@
 
+import UnspokenLetter from '../assets/projects/pic1.png';
 
 export const projectsData = [
-//   {
-//     id: 1,
-//     title: 'Project Title 1',
-//     category: 'Web App',
-//     image: 'https://flowbite.s3.amazonaws.com/docs/gallery/masonry/image.jpg',
-//     tech: ['⚛️ React', '🎨 CSS'],
-//     description: 'Brief description of Project Title 1.',
-//     liveUrl: '#',
-//     codeUrl: '#'
-//   },
+  {
+    id: 1,
+    title: 'Unspoken Letter',
+    category: 'Websites',
+    image: UnspokenLetter,
+    tech: ['Typescript', 'Javascript, Supabase', 'React'],
+    description: 'This UnspokenLetter is a platform where users can write letter and allows users to reflect on their current thoughts and feelings, and revisit them later.',
+    liveUrl: 'https://unspokenletter.vercel.app',
+    codeUrl: 'https://github.com/StDevRhenz/unspokenletter'
+  },
 //   {
 //     id: 2,
 //     title: 'Project Title 2',
