@@ -31,7 +31,7 @@ function CardCertificate({ certificate }) {
                     {certificate.description}
                 </p>
                 
-                <div className="flex items-center gap-2">
+                {/* <div className="flex items-center gap-2">
                     {certificate.technologies.map((tech, index) => (
                         <span 
                             key={index} 
@@ -44,7 +44,7 @@ function CardCertificate({ certificate }) {
                             {tech}
                         </span>
                     ))}
-                </div>
+                </div> */}
             </div>
         </div>
     );

@@ -4,23 +4,17 @@ import CardCertificate from '../components/CardCertificate';
 import { certificatesData } from '../data/certificatesData';
 
 const Certificates = () => {
-    // This controls whether to show all certificates or just the first 4
     const [showMore, setShowMore] = useState(false);
     
-    // Decide which certificates to show
     let certificatesToShow;
     if (showMore) {
-        // Show all certificates when "View More" is clicked
         certificatesToShow = certificatesData;
     } else {
-        // Show only first 4 certificates initially
         certificatesToShow = certificatesData.slice(0, 4);
     }
     
     return (
-        // MAIN CONTAINER: Full screen, dark background
         <div className="min-h-screen py-16 px-8" style={{backgroundColor: 'rgba(0, 0, 0, 0.9)'}}>
-            {/* CONTENT WRAPPER: Centered, max width */}
             <div className="max-w-7xl mx-auto">
                 <div className="text-white space-y-12">
                     
@@ -29,7 +23,6 @@ const Certificates = () => {
                         My <span className="font-medium">Certificates</span>
                     </h1>
                     
-                    {/* CERTIFICATES GRID: Show certificates in 2 columns */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         {/* Loop through certificates and show each one */}
                         {certificatesToShow.map(certificate => (
