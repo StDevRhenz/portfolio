@@ -1,5 +1,6 @@
 
 import UnspokenLetter from '../assets/projects/pic1.png';
+import Calculator from '../assets/projects/pic2.jpeg';
 
 export const projectsData = [
   {
@@ -7,21 +8,23 @@ export const projectsData = [
     title: 'Unspoken Letter',
     category: 'Websites',
     image: UnspokenLetter,
-    tech: ['Typescript', 'Javascript, Supabase', 'React'],
+    tech: ['TypeScript', 'JavaScript', 'Supabase', 'React'],
     description: 'This UnspokenLetter is a platform where users can write letter and allows users to reflect on their current thoughts and feelings, and revisit them later.',
     liveUrl: 'https://unspokenletter.vercel.app',
-    codeUrl: 'https://github.com/StDevRhenz/unspokenletter'
+    codeUrl: 'https://github.com/StDevRhenz/unspokenletter',
+    status: 'In Progress' // 'Done', 'Pending', 'In Progress'
   },
-//   {
-//     id: 2,
-//     title: 'Project Title 2',
-//     category: 'Web App',
-//     image: 'https://flowbite.s3.amazonaws.com/docs/gallery/masonry/image.jpg',
-//     tech: ['💚 Vue.js', '🔥 Firebase'],
-//     description: 'Brief description of Project Title 2.',
-//     liveUrl: '#',
-//     codeUrl: '#'
-//   },
+  {
+    id: 2,
+    title: 'Calculator App',
+    category: 'Mobile Application',
+    image: Calculator,
+    tech: ['React Native', 'Tailwind CSS', 'TypeScript', 'Expo'],
+    description: 'A simple calculator app with Different Feature like Scientific Calculator, Standard Calculator, Units Converter, and more.',
+    liveUrl: 'https://expo.dev/accounts/rhenz/projects/calculator/builds/f60ccecf-2774-4818-b5b4-5bde2bd8f7c5?fbclid=IwY2xjawLknYVleHRuA2FlbQIxMABicmlkETFDcDh6RVRLWHU3aWtOc0dwAR5uhDsuc7ap_3kj2334nAcleoC1s_wTxdmskDoXN4T7br6z13AnX-aBZ5G4Dg_aem_h5Xn_C0SNO0gWxmKzKU0aA',
+    codeUrl: 'https://github.com/StDevRhenz/Calculator',
+    status: 'Done' // 'Done', 'Pending', 'In Progress'
+  },
 //   {
 //     id: 3,
 //     title: 'Project Title 3',

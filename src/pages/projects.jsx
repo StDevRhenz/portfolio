@@ -12,9 +12,8 @@ const Projects = () => {
   } else {
     filteredProjects = projectsData.filter(project => project.category === activeTab);
   }
-
-
   
+
   return (
     <div className="min-h-screen py-16 px-8" style={{backgroundColor: 'rgba(0, 0, 0, 0.9)'}}>
       <div className="max-w-7xl mx-auto text-white space-y-12">
