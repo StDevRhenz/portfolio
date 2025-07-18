@@ -1,6 +1,7 @@
 
 import UnspokenLetter from '../assets/projects/pic1.png';
 import Calculator from '../assets/projects/pic2.jpeg';
+import CafeMeraki from '../assets/projects/pic3.png';
 
 export const projectsData = [
   {
@@ -12,7 +13,7 @@ export const projectsData = [
     description: 'This UnspokenLetter is a platform where users can write letter and allows users to reflect on their current thoughts and feelings, and revisit them later.',
     liveUrl: 'https://unspokenletter.vercel.app',
     codeUrl: 'https://github.com/StDevRhenz/unspokenletter',
-    status: 'In Progress' // 'Done', 'Pending', 'In Progress'
+    status: 'Done' // 'Done', 'Pending', 'In Progress'
   },
   {
     id: 2,
@@ -25,16 +26,17 @@ export const projectsData = [
     codeUrl: 'https://github.com/StDevRhenz/Calculator',
     status: 'Done' // 'Done', 'Pending', 'In Progress'
   },
-//   {
-//     id: 3,
-//     title: 'Project Title 3',
-//     category: 'Mobile App',
-//     image: 'https://flowbite.s3.amazonaws.com/docs/gallery/masonry/image.jpg',
-//     tech: ['📱 React Native', '📘 TypeScript'],
-//     description: 'Brief description of Project Title 3.',
-//     liveUrl: '#',
-//     codeUrl: '#'
-//   },
+  {
+    id: 3,
+    title: 'Cafe Meraki',
+    category: 'Websites',
+    image: CafeMeraki,
+    tech: ['Nextjs', 'TypeScript', 'Tailwind CSS', 'Laravel'],
+    description: 'This is the Cafe Meraki website. This project was recreated in 2025 to improve and enhance the original version developed in 2023. (1st yr College Project)',
+    liveUrl: 'https://cafe-meraki-kappa.vercel.app',
+    codeUrl: 'https://github.com/StDevRhenz/cafe-meraki',
+    status: 'In Progress' // 'Done', 'Pending', 'In Progress'
+  },
 //   {
 //     id: 4,
 //     title: 'Project Title 4',
