@@ -6,7 +6,7 @@ import About from './pages/about';
 import Certificates from './pages/certificates';
 import Projects from './pages/projects';
 import Contact from './pages/contact';
-import Skills from './pages/skills';
+import Services from './pages/services';
 
 import Home from './pages/home';
 
@@ -14,6 +14,7 @@ import './App.css';
 
 function App() {
   return (
+
   <div>
     <nav>
       <Navbar />
@@ -31,12 +32,12 @@ function App() {
       <Certificates />
     </section>
 
-    {/* <section id='skills'>
-      <Skills />
-    </section> */}
-
     <section id='projects'>
       <Projects />
+    </section>
+
+    <section id='services'>
+      <Services />
     </section>
 
     <section id='contact'>
@@ -50,7 +51,7 @@ function App() {
     
    
 
-    </div>
+  </div>
   );
 }
 

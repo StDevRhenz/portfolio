@@ -15,6 +15,7 @@ const Navbar = (props) => {
           <li><a href="#certificates" className="px-5 py-3 inline-block hover:bg-[#575757] rounded-md">Certificates</a></li>
           {/* <li><a href="#contact" className="px-5 py-3 inline-block hover:bg-[#575757] rounded-md">Skills</a></li> */}
           <li><a href="#projects" className="px-5 py-3 inline-block hover:bg-[#575757] rounded-md">Projects</a></li>
+          <li><a href="#services" className="px-5 py-3 inline-block hover:bg-[#575757] rounded-md">Services</a></li>
           <li><a href="#contact" className="px-5 py-3 inline-block hover:bg-[#575757] rounded-md">Contact</a></li>
         </ul>
       </div>
