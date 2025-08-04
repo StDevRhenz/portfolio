@@ -35,7 +35,7 @@ export const projectsData = [
     description: 'This is the Cafe Meraki website. This project was recreated in 2025 to improve and enhance the original version developed in 2023. (1st yr College Project)',
     liveUrl: 'https://cafe-meraki-kappa.vercel.app',
     codeUrl: 'https://github.com/StDevRhenz/cafe-meraki',
-    status: 'In Progress' // 'Done', 'Pending', 'In Progress'
+    status: 'Done' // 'Done', 'Pending', 'In Progress'
   },
 //   {
 //     id: 4,
