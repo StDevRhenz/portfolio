@@ -8,7 +8,7 @@ export function usePosts() {
   useEffect(() => {
     async function fetchPosts() {
       try {
-        const res = await fetch("http://localhost:5000/api/posts");
+        const res = await fetch("https://portfolio-chab.onrender.com/api/posts");
         if (!res.ok) throw new Error("Hindi na fetch ang posts");
         const data = await res.json();
         setPosts(data);
