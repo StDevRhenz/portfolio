@@ -4,15 +4,19 @@ import { supabase } from "../lib/supabase";
 const router = express.Router();
 
 router.get("/", async (req, res) => {
-  const { data, error } = await supabase
-    .from("posts")
-    .select("*")
-    .order("date", { ascending: false })
-    .limit(10);
+  try {
+    const { data, error } = await supabase
+      .from("posts")
+      .select("*")
+      .order("date", { ascending: false })
+      .limit(10);
 
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch posts" });
+  }
 });
-
 
 export default router;
