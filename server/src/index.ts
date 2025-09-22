@@ -1,11 +1,11 @@
-// src/index.ts
 import dotenv from "dotenv";
-dotenv.config(); // ✅ MUST be first
+dotenv.config();
 
 import express from "express";
 import cors from "cors";
 import postsRouter from "./routes/posts";
-import { supabase } from "./lib/supabase"; // now safe to import
+import "./cron/fetchGeminiCron";
+import { supabase } from "./lib/supabase";
 
 const app = express();
 app.use(cors());
@@ -16,7 +16,6 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, async () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 
-  // Test Supabase connection
   try {
     const { data, error } = await supabase.from("posts").select("*").limit(1);
     if (error) throw error;

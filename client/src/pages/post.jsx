@@ -5,28 +5,36 @@ export default function Post() {
   const { posts, loading, error } = usePosts();
   const [countdown, setCountdown] = useState("");
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date();
-      const nextMonday = new Date(now);
-      nextMonday.setDate(now.getDate() + ((1 + 7 - now.getDay()) % 7));
-      nextMonday.setHours(22, 0, 0, 0);
+useEffect(() => {
+  const interval = setInterval(() => {
+    const now = new Date();
+    const nextMonday = new Date(now);
 
-      const diff = nextMonday.getTime() - now.getTime();
-      if (diff <= 0) {
-        setCountdown("It's Monday 10 PM! 🚀");
-      } else {
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-        const minutes = Math.floor((diff / (1000 * 60)) % 60);
-        const seconds = Math.floor((diff / 1000) % 60);
-        setCountdown(`${days > 0 ? days + " day" + (days > 1 ? "s " : " ") : ""}${hours}h ${minutes}m ${seconds}s`);
+    const daysUntilMonday = (1 + 7 - now.getDay()) % 7 || 7;
+    nextMonday.setDate(now.getDate() + daysUntilMonday);
+    nextMonday.setHours(22, 0, 0, 0);
 
-      }
-    }, 1000);
+    let diff = nextMonday.getTime() - now.getTime();
+    if (diff < 0) {
+      nextMonday.setDate(nextMonday.getDate() + 7);
+      diff = nextMonday.getTime() - now.getTime();
+    }
 
-    return () => clearInterval(interval);
-  }, []);
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const minutes = Math.floor((diff / (1000 * 60)) % 60);
+    const seconds = Math.floor((diff / 1000) % 60);
+
+    setCountdown(
+      diff <= 0
+        ? "It's Monday 10 PM! 🚀"
+        : `${days > 0 ? days + " day" + (days > 1 ? "s " : " ") : ""}${hours}h ${minutes}m ${seconds}s`
+    );
+  }, 1000);
+
+  return () => clearInterval(interval);
+}, []);
+
 
   if (loading) return (
     <div className="flex items-center justify-center h-screen text-white" style={{ backgroundColor: 'rgba(0, 0, 0, 0.9)' }}>
