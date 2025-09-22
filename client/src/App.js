@@ -7,6 +7,7 @@ import Certificates from './pages/certificates';
 import Projects from './pages/projects';
 import Contact from './pages/contact';
 import Services from './pages/services';
+import Post from './pages/post';
 
 import Home from './pages/home';
 
@@ -28,6 +29,10 @@ function App() {
       <About />
     </section>
 
+    <section id='Post'>
+      <Post />
+    </section>
+
     <section id='certificates'>
       <Certificates />
     </section>
@@ -43,13 +48,6 @@ function App() {
     <section id='contact'>
       <Contact />
     </section>
-
-
-
-
-    
-    
-   
 
   </div>
   );
