@@ -12,6 +12,7 @@ const Navbar = (props) => {
         <ul className="flex space-x-4">
           <li><a href="#home" className="px-5 py-3 inline-block hover:bg-[#575757] rounded-md">Home</a></li>
           <li><a href="#about" className="px-5 py-3 inline-block hover:bg-[#575757] rounded-md">About</a></li>
+          <li><a href="#Post" className="px-5 py-3 inline-block hover:bg-[#575757] rounded-md">Blog</a></li>
           <li><a href="#certificates" className="px-5 py-3 inline-block hover:bg-[#575757] rounded-md">Certificates</a></li>
           {/* <li><a href="#contact" className="px-5 py-3 inline-block hover:bg-[#575757] rounded-md">Skills</a></li> */}
           <li><a href="#projects" className="px-5 py-3 inline-block hover:bg-[#575757] rounded-md">Projects</a></li>
