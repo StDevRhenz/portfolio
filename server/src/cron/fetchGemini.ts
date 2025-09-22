@@ -1,45 +1,38 @@
 import cron from "node-cron";
-import { getGeminiPosts } from "../services/gemini";
 import { supabase } from "../lib/supabase";
+import { getGeminiPosts } from "../services/gemini";
 
-// 🕛 Run every Monday at 00:00
-cron.schedule("0 0 * * 1", async () => {
-  console.log("⏰ Cron: Fetching new Gemini post...");
+cron.schedule("0 22 * * 1", async () => {
+  console.log("🕙 Weekly Cron: Fetching new Gemini posts & cleaning old posts...");
 
   try {
-    const posts = await getGeminiPosts();
-    const post = posts[0]; // kunin lang yung unang post
-
-    // Burahin muna lahat para laging 1 post lang
-    const { error: deleteError } = await supabase.from("posts").delete().neq("id", 0);
-    if (deleteError) throw deleteError;
-
-    // Insert new post
-    const { error: insertError } = await supabase.from("posts").insert([
-      {
-        title: post.title,
-        date: post.date,
-        content: post.content,
-      },
-    ]);
+    // 1️ Fetch new posts from Gemini
+    const newPosts = await getGeminiPosts();
+    const { error: insertError } = await supabase.from("posts").insert(newPosts);
     if (insertError) throw insertError;
+    console.log(`✅ Inserted ${newPosts.length} new Gemini posts`);
 
-    console.log("✅ New Gemini post saved to Supabase!");
-  } catch (err) {
-    console.error("❌ Cron job error:", err);
-  }
-});
+    // 2️ Cleanup old posts, keeping only the latest 6
+    const { data: posts, error } = await supabase
+      .from("posts")
+      .select("id")
+      .order("date", { ascending: true });
 
-// 🕕 Cleanup: Run every 6 hours to delete all posts
-cron.schedule("0 */6 * * *", async () => {
-  console.log("🧹 Cron: Cleaning up posts...");
-
-  try {
-    const { error } = await supabase.from("posts").delete().neq("id", 0);
     if (error) throw error;
 
-    console.log("✅ Old posts deleted successfully!");
+    if (posts && posts.length > 6) {
+      const idsToDelete = posts.slice(0, posts.length - 6).map(post => post.id);
+      const { error: delError } = await supabase
+        .from("posts")
+        .delete()
+        .in("id", idsToDelete);
+      if (delError) throw delError;
+
+      console.log(`🧹 Deleted ${idsToDelete.length} old posts`);
+    } else {
+      console.log("ℹ️ No cleanup needed, 6 or fewer posts exist.");
+    }
   } catch (err) {
-    console.error("❌ Cleanup error:", err);
+    console.error("❌ Weekly cron failed:", err);
   }
 });
