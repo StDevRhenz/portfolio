@@ -2,12 +2,14 @@
 import UnspokenLetter from '../assets/projects/pic1.png';
 import Calculator from '../assets/projects/pic2.jpeg';
 import CafeMeraki from '../assets/projects/pic3.png';
+import RideMotto from '../assets/projects/pic4.jpg';
+import DismissedOrNot from '../assets/projects/pic5.png';
 
 export const projectsData = [
   {
     id: 1,
     title: 'Unspoken Letter',
-    category: 'Websites',
+    category: 'Websites', //'All', 'Websites', 'Mobile Application', 'Desktop Application'
     image: UnspokenLetter,
     tech: ['TypeScript', 'JavaScript', 'Supabase', 'React'],
     description: 'This UnspokenLetter is a platform where users can write letter and allows users to reflect on their current thoughts and feelings, and revisit them later.',
@@ -37,26 +39,28 @@ export const projectsData = [
     codeUrl: 'https://github.com/StDevRhenz/cafe-meraki',
     status: 'Done' // 'Done', 'Pending', 'In Progress'
   },
-//   {
-//     id: 4,
-//     title: 'Project Title 4',
-//     category: 'Desktop App',
-//     image: 'https://flowbite.s3.amazonaws.com/docs/gallery/masonry/image.jpg',
-//     tech: ['💻 Electron', '🖥️ Node.js'],
-//     description: 'Brief description of Project Title 4.',
-//     liveUrl: '#',
-//     codeUrl: '#'
-//   },
-//   {
-//     id: 5,
-//     title: 'Project Title 5',
-//     category: 'Web App',
-//     image: 'https://flowbite.s3.amazonaws.com/docs/gallery/masonry/image.jpg',
-//     tech: ['🌐 Next.js', '📦 Redux'],
-//     description: 'Brief description of Project Title 5.',
-//     liveUrl: '#',
-//     codeUrl: '#'
-//   }
+  {
+    id: 4,
+    title: 'Ride Motto',
+    category: 'Mobile Application',
+    image: RideMotto,
+    tech: ['React Native', 'Nodejs', 'Typescript', 'Expo'],
+    description: 'This app gives the users the ability to book appointments, check products, and pin their location when they are stranded on the road. (3rd yr 1st Sem College Project)',
+    liveUrl: '#',
+    codeUrl: '#',
+    status: 'In Progress' // 'Done', 'Pending', 'In Progress'
+  },
+  {
+    id: 5,
+    title: 'Dismissed or not',
+    category: 'Mobile Application',
+    image: DismissedOrNot,
+    tech: ['Unity', 'C#'],
+    description: 'This Mobile arcade-horror maze runner where players experience a nightmare as a student trapped in an endless school. (3rd yr 1st Sem College Project)',
+    liveUrl: '#',
+    codeUrl: 'https://github.com/StDevRhenz/DismissedOrNotMobileGame',
+    status: 'Done' // 'Done', 'Pending', 'In Progress'
+  },
 ];
 
 export const projectCategories = ['All', 'Websites', 'Mobile Application', 'Desktop Application'];
