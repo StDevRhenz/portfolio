@@ -1,6 +1,6 @@
 
 import React from 'react';
-import Loadpage from './components/loadpage';
+// import Loadpage from './components/loadpage';
 import Navbar from './components/navbar';
 import About from './pages/about';
 import Certificates from './pages/certificates';
