@@ -64,7 +64,7 @@ function Contact() {
                             <span className="font-medium">TikTok</span>
                         </a>
                         <a 
-                            href="https://www.linkedin.com/in/rhenz-ganotice-2b547b276/" 
+                            href="https://www.linkedin.com/in/rhenz-ganotice-7aa0163a7" 
                             target="_blank"
                             rel="noopener noreferrer"
                             className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-lg transition-all duration-300 hover:scale-105 shadow-lg"
