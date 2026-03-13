@@ -3,1044 +3,616 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Computer Architecture & Organization — Answer Key</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<title>ELEC 2 — PHP OOP Reviewer</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0a0f;
-    --surface: #111118;
-    --card: #16161f;
-    --border: #2a2a3a;
-    --red: #ff2d2d;
-    --red-glow: rgba(255,45,45,0.15);
-    --red-dim: #cc1f1f;
-    --gold: #f5a623;
-    --text: #e8e8f0;
-    --muted: #6b6b88;
-    --correct: #ff2d2d;
-    --mono: 'IBM Plex Mono', monospace;
-    --sans: 'IBM Plex Sans', sans-serif;
-    --display: 'Bebas Neue', sans-serif;
+    --bg: #0d0f14;
+    --surface: #141720;
+    --surface2: #1c2130;
+    --border: #2a3045;
+    --accent: #7c6af7;
+    --accent2: #4ecdc4;
+    --accent3: #f7c94e;
+    --accent4: #f76c6c;
+    --text: #e8eaf2;
+    --text-muted: #7a8099;
+    --code-bg: #0a0c10;
+    --comment: #5a9ec9;
+    --keyword: #c678dd;
+    --string: #98c379;
+    --fn: #61afef;
+    --num: #d19a66;
+    --true: #4ecdc4;
+    --false: #f76c6c;
   }
-
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: var(--sans);
-    font-weight: 300;
-    line-height: 1.6;
+    font-family: 'Syne', sans-serif;
     min-height: 100vh;
+    overflow-x: hidden;
   }
-
-  /* HERO */
-  .hero {
-    position: relative;
-    padding: 60px 40px 40px;
-    border-bottom: 1px solid var(--border);
-    overflow: hidden;
-  }
-  .hero::before {
+  body::before {
     content: '';
-    position: absolute;
+    position: fixed;
     inset: 0;
-    background: 
-      radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255,45,45,0.08) 0%, transparent 70%),
-      repeating-linear-gradient(90deg, transparent 0px, transparent 39px, rgba(255,45,45,0.04) 39px, rgba(255,45,45,0.04) 40px),
-      repeating-linear-gradient(0deg, transparent 0px, transparent 39px, rgba(255,45,45,0.04) 39px, rgba(255,45,45,0.04) 40px);
+    background-image:
+      linear-gradient(rgba(124,106,247,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,106,247,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
     pointer-events: none;
+    z-index: 0;
   }
-  .hero-label {
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.3em;
-    color: var(--red);
-    text-transform: uppercase;
-    margin-bottom: 12px;
-    opacity: 0;
-    animation: fadeUp 0.6s 0.1s forwards;
-  }
-  .hero h1 {
-    font-family: var(--display);
-    font-size: clamp(48px, 8vw, 96px);
-    letter-spacing: 0.04em;
-    line-height: 0.9;
-    color: var(--text);
-    opacity: 0;
-    animation: fadeUp 0.6s 0.2s forwards;
-  }
-  .hero h1 span { color: var(--red); }
-  .hero-sub {
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 20px;
-    letter-spacing: 0.15em;
-    opacity: 0;
-    animation: fadeUp 0.6s 0.35s forwards;
-  }
-  .hero-meta {
-    display: flex;
-    gap: 32px;
-    margin-top: 32px;
-    opacity: 0;
-    animation: fadeUp 0.6s 0.45s forwards;
-  }
-  .meta-item {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .meta-label { font-size: 10px; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; font-family: var(--mono); }
-  .meta-value { font-size: 22px; font-family: var(--display); letter-spacing: 0.05em; color: var(--red); }
-
-  /* CONTAINER */
-  .container { max-width: 1000px; margin: 0 auto; padding: 0 40px 80px; }
-
-  /* SECTION */
-  .section {
-    margin-top: 60px;
-    opacity: 0;
-    animation: fadeUp 0.5s forwards;
-  }
-  .section:nth-child(1) { animation-delay: 0.5s; }
-  .section:nth-child(2) { animation-delay: 0.6s; }
-  .section:nth-child(3) { animation-delay: 0.7s; }
-  .section:nth-child(4) { animation-delay: 0.8s; }
-  .section:nth-child(5) { animation-delay: 0.9s; }
-
-  .section-header {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 32px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--border);
-  }
-  .section-num {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--red);
-    letter-spacing: 0.2em;
-    background: var(--red-glow);
-    border: 1px solid rgba(255,45,45,0.3);
-    padding: 4px 10px;
-    border-radius: 2px;
-  }
-  .section-title {
-    font-family: var(--display);
-    font-size: 28px;
-    letter-spacing: 0.06em;
-    color: var(--text);
-  }
-
-  /* MULTIPLE CHOICE GRID */
-  .mc-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
-    gap: 12px;
-  }
-
-  .mc-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 16px 18px;
-    transition: border-color 0.2s;
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
     position: relative;
-    overflow: hidden;
+    z-index: 1;
   }
-  .mc-card:hover { border-color: rgba(255,45,45,0.3); }
-  .mc-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0;
-    width: 3px; height: 100%;
-    background: var(--red);
-    opacity: 0;
-    transition: opacity 0.2s;
+  header {
+    padding: 60px 0 40px;
+    text-align: center;
   }
-  .mc-card:hover::before { opacity: 1; }
-
-  .mc-qnum {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 0.15em;
-    margin-bottom: 6px;
-  }
-  .mc-options {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    margin-bottom: 10px;
-  }
-  .mc-option {
-    font-size: 12px;
-    color: var(--muted);
-    padding: 3px 6px;
-    border-radius: 2px;
-    font-family: var(--mono);
-    letter-spacing: 0.02em;
-    transition: background 0.15s;
-  }
-  .mc-option.correct {
-    color: var(--red);
-    background: var(--red-glow);
-    border-left: 2px solid var(--red);
-    font-weight: 600;
-    padding-left: 8px;
-  }
-  .mc-option.correct::before { content: '✓ '; }
-
-  .mc-explain {
+  .badge {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--accent), #5b4fcf);
+    color: white;
+    font-family: 'Space Mono', monospace;
     font-size: 11px;
-    color: var(--muted);
-    font-style: italic;
-    border-top: 1px solid var(--border);
-    padding-top: 8px;
-    line-height: 1.5;
-    font-family: var(--sans);
-  }
-
-  /* CONVERSION SECTION */
-  .conv-block {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 28px 32px;
+    letter-spacing: 2px;
+    padding: 6px 16px;
+    border-radius: 2px;
     margin-bottom: 20px;
-  }
-  .conv-title {
-    font-family: var(--display);
-    font-size: 22px;
-    letter-spacing: 0.06em;
-    color: var(--text);
-    margin-bottom: 20px;
-  }
-  .conv-title code {
-    color: var(--red);
-    font-family: var(--mono);
-    font-size: 18px;
-  }
-  .conv-steps {
-    display: grid;
-    grid-template-columns: auto 1fr auto auto;
-    gap: 0;
-    margin-bottom: 20px;
-    border: 1px solid var(--border);
-    border-radius: 3px;
-    overflow: hidden;
-  }
-  .conv-step-header {
-    background: rgba(255,45,45,0.12);
-    color: var(--red);
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.2em;
-    padding: 8px 16px;
     text-transform: uppercase;
-    border-bottom: 1px solid var(--border);
   }
-  .conv-step-cell {
-    padding: 7px 16px;
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--text);
-    border-bottom: 1px solid rgba(255,255,255,0.03);
+  h1 {
+    font-size: clamp(32px, 6vw, 56px);
+    font-weight: 800;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #fff 0%, var(--accent) 60%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
   }
-  .conv-step-cell:nth-child(4n+1) { background: rgba(255,255,255,0.02); color: var(--muted); }
-  .conv-step-cell.rem-1 { color: var(--red); font-weight: 600; }
-
-  .conv-results {
+  .subtitle {
+    color: var(--text-muted);
+    font-size: 15px;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 1px;
+  }
+  .tabs {
     display: flex;
-    gap: 16px;
+    gap: 8px;
+    margin: 40px 0 32px;
     flex-wrap: wrap;
   }
-  .conv-result {
+  .tab {
+    padding: 10px 20px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
     background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 3px;
-    padding: 14px 20px;
-    min-width: 160px;
-  }
-  .conv-result-label {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    margin-bottom: 6px;
-  }
-  .conv-result-val {
-    font-family: var(--mono);
-    font-size: 20px;
-    color: var(--red);
-    font-weight: 600;
-    letter-spacing: 0.05em;
-  }
-  .conv-workings {
-    font-family: var(--mono);
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: 'Space Mono', monospace;
     font-size: 12px;
-    color: var(--muted);
-    margin: 12px 0;
-    background: rgba(255,255,255,0.02);
-    border: 1px solid var(--border);
-    padding: 12px 16px;
-    border-radius: 3px;
-    line-height: 2;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+    user-select: none;
   }
-  .conv-workings span { color: var(--red); }
-
-  /* OPERATIONS */
-  .ops-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 16px;
+  .tab:hover { border-color: var(--accent); color: var(--text); }
+  .tab.active { background: var(--accent); border-color: var(--accent); color: white; font-weight: 700; }
+  .section { display: none; }
+  .section.active { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .part-header { margin-bottom: 28px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+  .part-label { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--accent); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 6px; }
+  .part-title { font-size: 24px; font-weight: 700; color: var(--text); }
+  .part-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 4px; font-family: 'Space Mono', monospace; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px 24px; margin-bottom: 12px; transition: border-color 0.2s; }
+  .card:hover { border-color: var(--accent); }
+  .q-num { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--accent3); letter-spacing: 1px; margin-bottom: 8px; }
+  .q-text { font-size: 15px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.6; }
+  .q-text code { background: var(--surface2); padding: 1px 6px; border-radius: 3px; font-family: 'Space Mono', monospace; font-size: 13px; color: var(--accent2); }
+  .answer-toggle { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-family: 'Space Mono', monospace; font-size: 12px; color: var(--accent); border: 1px solid var(--accent); padding: 6px 14px; border-radius: 3px; transition: all 0.2s; user-select: none; }
+  .answer-toggle:hover { background: var(--accent); color: white; }
+  .answer-box { display: none; margin-top: 14px; padding: 14px 18px; background: var(--surface2); border-left: 3px solid var(--accent); border-radius: 0 4px 4px 0; font-size: 15px; font-weight: 700; color: var(--text); animation: slideDown 0.2s ease; }
+  .answer-box code { background: rgba(124,106,247,0.15); padding: 1px 6px; border-radius: 3px; font-family: 'Space Mono', monospace; font-size: 13px; color: var(--accent); }
+  .answer-box.show { display: block; }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+  .tf-true { color: var(--true); font-size: 18px; }
+  .tf-false { color: var(--false); font-size: 18px; }
+  .tf-explain { font-size: 12px; font-family: 'Space Mono', monospace; color: var(--text-muted); margin-top: 8px; font-weight: 400; line-height: 1.6; }
+  .tf-explain code { background: rgba(124,106,247,0.15); padding: 1px 5px; border-radius: 3px; color: var(--accent); }
+  .enum-list { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+  .enum-item { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--text); line-height: 1.5; font-weight: 400; }
+  .enum-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent2); flex-shrink: 0; margin-top: 6px; }
+  .enum-item code { background: rgba(78,205,196,0.15); padding: 1px 5px; border-radius: 3px; font-family: 'Space Mono', monospace; font-size: 12px; color: var(--accent2); }
+  .code-wrap { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin-top: 14px; }
+  .code-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .code-lang { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--text-muted); letter-spacing: 1px; }
+  .code-dots { display: flex; gap: 6px; }
+  .code-dots span { width: 10px; height: 10px; border-radius: 50%; }
+  .code-dots span:nth-child(1) { background: #f76c6c; }
+  .code-dots span:nth-child(2) { background: var(--accent3); }
+  .code-dots span:nth-child(3) { background: var(--true); }
+  pre { padding: 20px; overflow-x: auto; font-family: 'Space Mono', monospace; font-size: 13px; line-height: 1.8; tab-size: 4; }
+  .c-kw { color: var(--keyword); }
+  .c-fn { color: var(--fn); }
+  .c-str { color: var(--string); }
+  .c-num { color: var(--num); }
+  .c-cm { color: var(--comment); font-style: italic; }
+  .c-this { color: #e06c75; }
+  .c-echo { color: var(--accent3); }
+  .reveal-all { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-family: 'Space Mono', monospace; font-size: 12px; color: var(--text-muted); border: 1px solid var(--border); padding: 8px 16px; border-radius: 3px; transition: all 0.2s; margin-bottom: 20px; user-select: none; }
+  .reveal-all:hover { border-color: var(--accent3); color: var(--accent3); }
+  .coding-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 24px; margin-bottom: 20px; }
+  .coding-title { font-size: 16px; font-weight: 700; color: var(--accent3); margin-bottom: 6px; }
+  .coding-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.6; font-family: 'Space Mono', monospace; }
+  .coding-desc code { background: var(--surface2); padding: 1px 5px; border-radius: 3px; color: var(--accent2); }
+  .tag { display: inline-block; padding: 3px 10px; background: rgba(124,106,247,0.12); color: var(--accent); border-radius: 2px; font-family: 'Space Mono', monospace; font-size: 11px; margin: 2px; border: 1px solid rgba(124,106,247,0.2); }
+  .concepts { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+  .progress-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 3px; background: var(--border); z-index: 100; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); width: 25%; transition: width 0.3s ease; }
+  @media (max-width: 600px) {
+    .tabs { gap: 6px; }
+    .tab { padding: 8px 12px; font-size: 11px; }
+    pre { font-size: 11px; }
   }
-  .op-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 20px;
-  }
-  .op-num {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 0.2em;
-    margin-bottom: 8px;
-  }
-  .op-expr {
-    font-family: var(--mono);
-    font-size: 13px;
-    color: var(--text);
-    margin-bottom: 14px;
-  }
-  .op-work {
-    font-family: var(--mono);
-    font-size: 12px;
-    line-height: 1.9;
-    color: var(--muted);
-    background: rgba(0,0,0,0.3);
-    padding: 10px 14px;
-    border-radius: 2px;
-    margin-bottom: 12px;
-    white-space: pre;
-    border-left: 2px solid var(--border);
-  }
-  .op-answer {
-    font-family: var(--mono);
-    font-size: 16px;
-    color: var(--red);
-    font-weight: 600;
-    letter-spacing: 0.05em;
-  }
-  .op-answer::before { content: '= '; color: var(--muted); font-weight: 400; }
-
-  /* COMPLEMENT TABLE */
-  .comp-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-family: var(--mono);
-    font-size: 12px;
-  }
-  .comp-table th {
-    background: rgba(255,45,45,0.12);
-    color: var(--red);
-    font-size: 10px;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    padding: 12px 16px;
-    text-align: left;
-    border-bottom: 1px solid var(--border);
-  }
-  .comp-table td {
-    padding: 12px 16px;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
-    color: var(--text);
-  }
-  .comp-table tr:last-child td { border-bottom: none; }
-  .comp-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
-  .comp-table td.answer { color: var(--red); font-weight: 600; }
-
-  .comp-method {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 20px 24px;
-    margin-bottom: 24px;
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 2;
-  }
-  .comp-method .step { color: var(--red); font-weight: 600; }
-
-  /* ASCII TABLE */
-  .ascii-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-  }
-  .ascii-block {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    overflow: hidden;
-  }
-  .ascii-block-title {
-    background: rgba(255,45,45,0.12);
-    color: var(--red);
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    padding: 10px 16px;
-    border-bottom: 1px solid var(--border);
-  }
-  .ascii-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-family: var(--mono);
-    font-size: 12px;
-  }
-  .ascii-table th {
-    padding: 8px 14px;
-    text-align: left;
-    color: var(--muted);
-    font-size: 10px;
-    letter-spacing: 0.15em;
-    border-bottom: 1px solid var(--border);
-  }
-  .ascii-table td {
-    padding: 7px 14px;
-    border-bottom: 1px solid rgba(255,255,255,0.03);
-  }
-  .ascii-table td:first-child { color: var(--muted); }
-  .ascii-table td:last-child { color: var(--red); font-weight: 600; font-size: 14px; }
-  .ascii-table tr:last-child td { border-bottom: none; }
-  .ascii-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
-
-  .ascii-note {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 14px 18px;
-    margin-bottom: 20px;
-    line-height: 1.8;
-  }
-  .ascii-note span { color: var(--red); }
-
-  /* FOOTER */
-  .footer {
-    text-align: center;
-    padding: 40px;
-    border-top: 1px solid var(--border);
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 0.15em;
-  }
-  .footer span { color: var(--red); }
-
-  /* PRINT */
-  @media print {
-    body { background: white; color: black; }
-    .hero::before { display: none; }
-    .mc-card, .conv-block, .op-card, .ascii-block { border-color: #ddd; background: white; }
-    .section-num, .mc-qnum, .mc-explain { color: #666; }
-    .mc-option.correct, .conv-result-val, .op-answer, .comp-table td.answer, .ascii-table td:last-child {
-      color: red !important;
-    }
-    .hero h1, .section-title { color: black; }
-    .hero h1 span { color: red; }
-    * { animation: none !important; opacity: 1 !important; }
-  }
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* Scrollbar */
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 </style>
 </head>
 <body>
-
-<!-- HERO -->
-<div class="hero">
-  <div class="hero-label">// answer key — full solutions</div>
-  <h1>COMPUTER<br><span>ARCH</span>ITECTURE<br>&amp; ORGANIZATION</h1>
-  <div class="hero-sub">EXAM REVIEW DOCUMENT &nbsp;·&nbsp; ALL SECTIONS &nbsp;·&nbsp; RED = CORRECT ANSWER</div>
-  <div class="hero-meta">
-    <div class="meta-item">
-      <span class="meta-label">MC Items</span>
-      <span class="meta-value">54</span>
-    </div>
-    <div class="meta-item">
-      <span class="meta-label">Conversions</span>
-      <span class="meta-value">6</span>
-    </div>
-    <div class="meta-item">
-      <span class="meta-label">Operations</span>
-      <span class="meta-value">9</span>
-    </div>
-    <div class="meta-item">
-      <span class="meta-label">Complement</span>
-      <span class="meta-value">8</span>
-    </div>
-    <div class="meta-item">
-      <span class="meta-label">ASCII</span>
-      <span class="meta-value">14+</span>
-    </div>
-  </div>
-</div>
-
 <div class="container">
+  <header>
+    <div class="badge">AY 2025–2026 · Long Quiz</div>
+    <h1>PHP OOP<br>Reviewer</h1>
+    <p class="subtitle">ELEC 2 · All 4 Parts · Interactive</p>
+  </header>
 
-<!-- ══════════════════════════════════════════ -->
-<!-- SECTION I: MULTIPLE CHOICE                 -->
-<!-- ══════════════════════════════════════════ -->
-<div class="section">
-  <div class="section-header">
-    <span class="section-num">SECTION I</span>
-    <span class="section-title">MULTIPLE CHOICE</span>
+  <div class="tabs">
+    <div class="tab active" onclick="showSection('p1', this)">Part I — ID</div>
+    <div class="tab" onclick="showSection('p2', this)">Part II — T/F</div>
+    <div class="tab" onclick="showSection('p3', this)">Part III — Enum</div>
+    <div class="tab" onclick="showSection('p4', this)">Part IV — Code</div>
   </div>
 
-  <div class="mc-grid" id="mc-container"></div>
+  <!-- PART I -->
+  <div class="section active" id="p1">
+    <div class="part-header">
+      <div class="part-label">Part I</div>
+      <div class="part-title">Identification</div>
+      <div class="part-subtitle">2 points each · 10 items · 20 pts total</div>
+    </div>
+    <div class="reveal-all" onclick="revealAll('p1')">▶ Reveal All Answers</div>
+
+    <div class="card">
+      <div class="q-num">ITEM 01</div>
+      <div class="q-text">Programming paradigm based on objects that combine data and behavior.</div>
+      <div class="answer-toggle" onclick="toggle(this)">▶ Show Answer</div>
+      <div class="answer-box">Object-Oriented Programming (OOP)</div>
+    </div>
+    <div class="card">
+      <div class="q-num">ITEM 02</div>
+      <div class="q-text">Blueprint used to create objects.</div>
+      <div class="answer-toggle" onclick="toggle(this)">▶ Show Answer</div>
+      <div class="answer-box">Class</div>
+    </div>
+    <div class="card">
+      <div class="q-num">ITEM 03</div>
+      <div class="q-text">Instance of a class.</div>
+      <div class="answer-toggle" onclick="toggle(this)">▶ Show Answer</div>
+      <div class="answer-box">Object</div>
+    </div>
+    <div class="card">
+      <div class="q-num">ITEM 04</div>
+      <div class="q-text">Keyword used to refer to the current object inside a class.</div>
+      <div class="answer-toggle" onclick="toggle(this)">▶ Show Answer</div>
+      <div class="answer-box"><code>$this</code></div>
+    </div>
+    <div class="card">
+      <div class="q-num">ITEM 05</div>
+      <div class="q-text">Special method automatically executed when an object is created.</div>
+      <div class="answer-toggle" onclick="toggle(this)">▶ Show Answer</div>
+      <div class="answer-box">Constructor — <code>__construct()</code></div>
+    </div>
+    <div class="card">
+      <div class="q-num">ITEM 06</div>
+      <div class="q-text">Method executed when an object is destroyed.</div>
+      <div class="answer-toggle" onclick="toggle(this)">▶ Show Answer</div>
+      <div class="answer-box">Destructor — <code>__destruct()</code></div>
+    </div>
+    <div class="card">
+      <div class="q-num">ITEM 07</div>
+      <div class="q-text">Access modifier accessible anywhere in the program.</div>
+      <div class="answer-toggle" onclick="toggle(this)">▶ Show Answer</div>
+      <div class="answer-box"><code>public</code></div>
+    </div>
+    <div class="card">
+      <div class="q-num">ITEM 08</div>
+      <div class="q-text">Access modifier accessible only within the same class.</div>
+      <div class="answer-toggle" onclick="toggle(this)">▶ Show Answer</div>
+      <div class="answer-box"><code>private</code></div>
+    </div>
+    <div class="card">
+      <div class="q-num">ITEM 09</div>
+      <div class="q-text">Access modifier accessible within the class and its child classes.</div>
+      <div class="answer-toggle" onclick="toggle(this)">▶ Show Answer</div>
+      <div class="answer-box"><code>protected</code></div>
+    </div>
+    <div class="card">
+      <div class="q-num">ITEM 10</div>
+      <div class="q-text">Keyword used to implement inheritance in PHP.</div>
+      <div class="answer-toggle" onclick="toggle(this)">▶ Show Answer</div>
+      <div class="answer-box"><code>extends</code></div>
+    </div>
+  </div>
+
+  <!-- PART II -->
+  <div class="section" id="p2">
+    <div class="part-header">
+      <div class="part-label">Part II</div>
+      <div class="part-title">True or False</div>
+      <div class="part-subtitle">2 points each · 10 items · 20 pts total</div>
+    </div>
+    <div class="reveal-all" onclick="revealAll('p2')">▶ Reveal All Answers</div>
+
+    <div class="card">
+      <div class="q-num">ITEM 11</div>
+      <div class="q-text">Static properties belong to the object rather than the class.</div>
+      <div class="answer-toggle" onclick="toggle(this)">▶ Show Answer</div>
+      <div class="answer-box">
+        <span class="tf-false">FALSE</span>
+        <div class="tf-explain">Static properties belong to the CLASS, hindi sa individual objects. Shared across all instances — accessed via <code>ClassName::$property</code>.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="q-num">ITEM 12</div>
+      <div class="q-text">Static methods can be called without creating an object.</div>
+      <div class="answer-toggle" onclick="toggle(this)">▶ Show Answer</div>
+      <div class="answer-box">
+        <span class="tf-true">TRUE</span>
+        <div class="tf-explain">Use <code>ClassName::methodName()</code> — hindi na kailangan ng <code>new</code>.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="q-num">ITEM 13</div>
+      <div class="q-text">The keyword <code>const</code> is used to declare class constants.</div>
+      <div class="answer-toggle" onclick="toggle(this)">▶ Show Answer</div>
+      <div class="answer-box">
+        <span class="tf-true">TRUE</span>
+        <div class="tf-explain">Example: <code>const PI = 3.14;</code> sa loob ng class. Accessed via <code>ClassName::PI</code>.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="q-num">ITEM 14</div>
+      <div class="q-text">Traits allow code reuse across multiple classes.</div>
+      <div class="answer-toggle" onclick="toggle(this)">▶ Show Answer</div>
+      <div class="answer-box">
+        <span class="tf-true">TRUE</span>
+        <div class="tf-explain">Traits solve the single-inheritance limitation — pwedeng gamitin ang isang trait sa maraming class.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="q-num">ITEM 15</div>
+      <div class="q-text">Abstract classes can be instantiated directly.</div>
+      <div class="answer-toggle" onclick="toggle(this)">▶ Show Answer</div>
+      <div class="answer-box">
+        <span class="tf-false">FALSE</span>
+        <div class="tf-explain">Abstract classes HINDI pwedeng i-instantiate. Kailangan i-extend muna at gumawa ng child class object.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="q-num">ITEM 16</div>
+      <div class="q-text">Abstract methods must be implemented in child classes.</div>
+      <div class="answer-toggle" onclick="toggle(this)">▶ Show Answer</div>
+      <div class="answer-box">
+        <span class="tf-true">TRUE</span>
+        <div class="tf-explain">Ang bawat child class na nag-e-extend ng abstract class ay OBLIGADO mag-implement ng lahat ng abstract methods nito.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="q-num">ITEM 17</div>
+      <div class="q-text">The scope resolution operator (<code>::</code>) is used to access static members.</div>
+      <div class="answer-toggle" onclick="toggle(this)">▶ Show Answer</div>
+      <div class="answer-box">
+        <span class="tf-true">TRUE</span>
+        <div class="tf-explain">Example: <code>Counter::$count</code> or <code>Counter::increment()</code>. Also used for constants: <code>Math::PI</code>.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="q-num">ITEM 18</div>
+      <div class="q-text">Namespaces help prevent class name conflicts.</div>
+      <div class="answer-toggle" onclick="toggle(this)">▶ Show Answer</div>
+      <div class="answer-box">
+        <span class="tf-true">TRUE</span>
+        <div class="tf-explain">Namespaces group related code together at iniiwasan ang naming collisions sa malalaking projects.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="q-num">ITEM 19</div>
+      <div class="q-text">The <strong>final</strong> keyword prevents a method from being overridden.</div>
+      <div class="answer-toggle" onclick="toggle(this)">▶ Show Answer</div>
+      <div class="answer-box">
+        <span class="tf-true">TRUE</span>
+        <div class="tf-explain">A <code>final</code> method hindi pwedeng i-override ng child class. A <code>final</code> class hindi pwedeng i-extend.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="q-num">ITEM 20</div>
+      <div class="q-text">The <strong>$this</strong> keyword refers to the class itself.</div>
+      <div class="answer-toggle" onclick="toggle(this)">▶ Show Answer</div>
+      <div class="answer-box">
+        <span class="tf-false">FALSE</span>
+        <div class="tf-explain"><code>$this</code> = kasalukuyang OBJECT (instance), hindi ang class. Para sa class, gamitin ang <code>self::</code> o <code>static::</code>.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PART III -->
+  <div class="section" id="p3">
+    <div class="part-header">
+      <div class="part-label">Part III</div>
+      <div class="part-title">Enumeration</div>
+      <div class="part-subtitle">3 points each · 4 items · 12 pts total</div>
+    </div>
+    <div class="reveal-all" onclick="revealAll('p3')">▶ Reveal All Answers</div>
+
+    <div class="card">
+      <div class="q-num">ITEM 21</div>
+      <div class="q-text">Enumerate the <strong>three PHP access modifiers</strong>.</div>
+      <div class="answer-toggle" onclick="toggle(this)">▶ Show Answer</div>
+      <div class="answer-box">
+        <div class="enum-list">
+          <div class="enum-item"><span class="enum-dot"></span><code>public</code> — accessible anywhere sa program</div>
+          <div class="enum-item"><span class="enum-dot"></span><code>private</code> — accessible only within the same class</div>
+          <div class="enum-item"><span class="enum-dot"></span><code>protected</code> — accessible within class and its child classes</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="q-num">ITEM 22</div>
+      <div class="q-text">Enumerate <strong>three advantages of Object-Oriented Programming</strong>.</div>
+      <div class="answer-toggle" onclick="toggle(this)">▶ Show Answer</div>
+      <div class="answer-box">
+        <div class="enum-list">
+          <div class="enum-item"><span class="enum-dot"></span><strong>Reusability</strong> — pwedeng gamitin ulit ang code sa pamamagitan ng inheritance at traits</div>
+          <div class="enum-item"><span class="enum-dot"></span><strong>Encapsulation</strong> — ang data ay naka-bundle at protektado sa loob ng objects</div>
+          <div class="enum-item"><span class="enum-dot"></span><strong>Maintainability</strong> — mas madaling i-manage, i-debug, at i-update ang modular na code</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="q-num">ITEM 23</div>
+      <div class="q-text">Enumerate <strong>three characteristics of class constants</strong>.</div>
+      <div class="answer-toggle" onclick="toggle(this)">▶ Show Answer</div>
+      <div class="answer-box">
+        <div class="enum-list">
+          <div class="enum-item"><span class="enum-dot"></span>Immutable — hindi pwedeng baguhin ang value pagkatapos ng declaration</div>
+          <div class="enum-item"><span class="enum-dot"></span>Accessed using the scope resolution operator <code>::</code></div>
+          <div class="enum-item"><span class="enum-dot"></span>Shared across all instances — belong sa class, hindi sa objects</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="q-num">ITEM 24</div>
+      <div class="q-text">Enumerate <strong>three benefits of namespaces in PHP</strong>.</div>
+      <div class="answer-toggle" onclick="toggle(this)">▶ Show Answer</div>
+      <div class="answer-box">
+        <div class="enum-list">
+          <div class="enum-item"><span class="enum-dot"></span>Pinipigilan ang class/function name conflicts sa malalaking projects</div>
+          <div class="enum-item"><span class="enum-dot"></span>Mas maayos na pag-oorganize ng code sa logical groups</div>
+          <div class="enum-item"><span class="enum-dot"></span>Pinapabuti ang readability at modularity ng code</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PART IV -->
+  <div class="section" id="p4">
+    <div class="part-header">
+      <div class="part-label">Part IV</div>
+      <div class="part-title">Coding / Analysis</div>
+      <div class="part-subtitle">5 points each · 5 items · 25 pts total · may Taglish comments</div>
+    </div>
+
+    <div class="coding-card">
+      <div class="q-num">ITEM 25</div>
+      <div class="coding-title">PHP Class — Student</div>
+      <div class="coding-desc">Create a PHP class named <code>Student</code> with properties <code>name</code> and <code>course</code>, a constructor, and a <code>displayInfo()</code> method.</div>
+      <div class="concepts"><span class="tag">class</span><span class="tag">constructor</span><span class="tag">$this</span><span class="tag">method</span><span class="tag">public</span></div>
+      <div class="code-wrap">
+        <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-lang">PHP</div></div>
+        <pre><span class="c-kw">&lt;?php</span>
+<span class="c-cm">// Class = blueprint o template ng isang object</span>
+<span class="c-kw">class</span> <span class="c-fn">Student</span> {
+
+    <span class="c-cm">// Properties = mga variable sa loob ng class</span>
+    <span class="c-cm">// "public" = pwede ma-access kahit saan</span>
+    <span class="c-kw">public</span> $name;
+    <span class="c-kw">public</span> $course;
+
+    <span class="c-cm">// Constructor = awtomatikong tinatawag kapag gumawa ng bagong object</span>
+    <span class="c-cm">// Dito natin ini-initialize ang mga values ng properties</span>
+    <span class="c-kw">public function</span> <span class="c-fn">__construct</span>($name, $course) {
+        <span class="c-cm">// $this = tumutukoy sa kasalukuyang object</span>
+        <span class="c-this">$this</span>->name = $name;
+        <span class="c-this">$this</span>->course = $course;
+    }
+
+    <span class="c-cm">// Method para ipakita ang details ng student</span>
+    <span class="c-kw">public function</span> <span class="c-fn">displayInfo</span>() {
+        <span class="c-echo">echo</span> <span class="c-str">"Name: "</span> . <span class="c-this">$this</span>->name . <span class="c-str">", Course: "</span> . <span class="c-this">$this</span>->course;
+    }
+}
+
+<span class="c-cm">// Gumawa ng bagong Student object - tinatawag ang constructor</span>
+$s = <span class="c-kw">new</span> <span class="c-fn">Student</span>(<span class="c-str">"Ana"</span>, <span class="c-str">"BSIT"</span>);
+
+<span class="c-cm">// Tawagin ang displayInfo() method</span>
+$s-><span class="c-fn">displayInfo</span>(); <span class="c-cm">// Output: Name: Ana, Course: BSIT</span>
+<span class="c-kw">?&gt;</span></pre>
+      </div>
+    </div>
+
+    <div class="coding-card">
+      <div class="q-num">ITEM 26</div>
+      <div class="coding-title">Inheritance — Person & Student</div>
+      <div class="coding-desc">Write a PHP program demonstrating inheritance: parent class <code>Person</code>, child class <code>Student</code> that extends Person, display the inherited name.</div>
+      <div class="concepts"><span class="tag">extends</span><span class="tag">inheritance</span><span class="tag">parent class</span><span class="tag">child class</span></div>
+      <div class="code-wrap">
+        <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-lang">PHP</div></div>
+        <pre><span class="c-kw">&lt;?php</span>
+<span class="c-cm">// Parent class = ang "nagbibigay" ng properties at methods</span>
+<span class="c-kw">class</span> <span class="c-fn">Person</span> {
+    <span class="c-kw">public</span> $name;
+
+    <span class="c-kw">public function</span> <span class="c-fn">__construct</span>($name) {
+        <span class="c-this">$this</span>->name = $name;
+    }
+}
+
+<span class="c-cm">// Child class - "extends" = nag-iinherit ng lahat mula sa Person</span>
+<span class="c-cm">// Lahat ng properties at methods ng Person = available sa Student</span>
+<span class="c-kw">class</span> <span class="c-fn">Student</span> <span class="c-kw">extends</span> <span class="c-fn">Person</span> {
+    <span class="c-cm">// Walang laman - ginagamit na lang ang inherited na properties</span>
+}
+
+<span class="c-cm">// Gumagamit ng Person's constructor kahit Student ang ginawa</span>
+$s = <span class="c-kw">new</span> <span class="c-fn">Student</span>(<span class="c-str">"Juan"</span>);
+
+<span class="c-cm">// Ang "name" ay galing sa Person, pero accessible sa Student</span>
+<span class="c-cm">// Ito ang INHERITANCE — paggamit ng properties ng parent</span>
+<span class="c-echo">echo</span> $s->name; <span class="c-cm">// Output: Juan</span>
+<span class="c-kw">?&gt;</span></pre>
+      </div>
+    </div>
+
+    <div class="coding-card">
+      <div class="q-num">ITEM 27</div>
+      <div class="coding-title">Static — Counter Class</div>
+      <div class="coding-desc">Create a PHP class <code>Counter</code> with a static property <code>$count = 0</code> and a static method <code>increment()</code> that increases the count.</div>
+      <div class="concepts"><span class="tag">static</span><span class="tag">self::</span><span class="tag">ClassName::</span><span class="tag">no instantiation</span></div>
+      <div class="code-wrap">
+        <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-lang">PHP</div></div>
+        <pre><span class="c-kw">&lt;?php</span>
+<span class="c-kw">class</span> <span class="c-fn">Counter</span> {
+
+    <span class="c-cm">// Static property = isa lang para sa LAHAT ng Counter objects</span>
+    <span class="c-cm">// Hindi kailangan gumawa ng object para ma-access ito</span>
+    <span class="c-kw">public static</span> $count = <span class="c-num">0</span>;
+
+    <span class="c-cm">// Static method = tinatawag gamit ang ClassName:: (walang new)</span>
+    <span class="c-kw">public static function</span> <span class="c-fn">increment</span>() {
+        <span class="c-cm">// "self::" = tumutukoy sa sariling class (Counter)</span>
+        self::$count++;
+    }
+}
+
+<span class="c-cm">// Tinatawag ang static method nang walang "new Counter()"</span>
+Counter::<span class="c-fn">increment</span>(); <span class="c-cm">// count = 1</span>
+Counter::<span class="c-fn">increment</span>(); <span class="c-cm">// count = 2</span>
+
+<span class="c-cm">// I-access ang static property gamit din ang "::"</span>
+<span class="c-echo">echo</span> Counter::$count; <span class="c-cm">// Output: 2</span>
+<span class="c-kw">?&gt;</span></pre>
+      </div>
+    </div>
+
+    <div class="coding-card">
+      <div class="q-num">ITEM 28</div>
+      <div class="coding-title">Trait — Logger</div>
+      <div class="coding-desc">Write a PHP example demonstrating the use of a trait named <code>Logger</code> with a method <code>log($msg)</code>.</div>
+      <div class="concepts"><span class="tag">trait</span><span class="tag">use</span><span class="tag">code reuse</span><span class="tag">multiple classes</span></div>
+      <div class="code-wrap">
+        <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-lang">PHP</div></div>
+        <pre><span class="c-kw">&lt;?php</span>
+<span class="c-cm">// Trait = "add-on" na pwedeng gamitin ng iba't ibang class</span>
+<span class="c-cm">// Solusyon sa single-inheritance limitation ng PHP</span>
+<span class="c-kw">trait</span> <span class="c-fn">Logger</span> {
+
+    <span class="c-cm">// Method na kasama sa trait</span>
+    <span class="c-cm">// Pwedeng gamitin ng kahit anong class na nag-"use" ng Logger</span>
+    <span class="c-kw">public function</span> <span class="c-fn">log</span>($msg) {
+        <span class="c-echo">echo</span> <span class="c-str">"Log: "</span> . $msg;
+    }
+}
+
+<span class="c-kw">class</span> <span class="c-fn">App</span> {
+    <span class="c-cm">// "use" keyword = kinokopya ang mga methods ng trait dito</span>
+    <span class="c-cm">// Parang "kinukuha" ang log() method mula sa Logger</span>
+    <span class="c-kw">use</span> <span class="c-fn">Logger</span>;
+}
+
+$app = <span class="c-kw">new</span> <span class="c-fn">App</span>();
+
+<span class="c-cm">// Kahit ang log() ay galing sa trait, pwede nating tawagin ito</span>
+$app-><span class="c-fn">log</span>(<span class="c-str">"Hello!"</span>); <span class="c-cm">// Output: Log: Hello!</span>
+<span class="c-kw">?&gt;</span></pre>
+      </div>
+    </div>
+
+    <div class="coding-card">
+      <div class="q-num">ITEM 29</div>
+      <div class="coding-title">Abstract Class — Payment & GCash</div>
+      <div class="coding-desc">Create an abstract class <code>Payment</code> with an abstract method <code>processPayment()</code>. Create a child class <code>GCash</code> that implements the method.</div>
+      <div class="concepts"><span class="tag">abstract class</span><span class="tag">abstract method</span><span class="tag">extends</span><span class="tag">implementation</span></div>
+      <div class="code-wrap">
+        <div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-lang">PHP</div></div>
+        <pre><span class="c-kw">&lt;?php</span>
+<span class="c-cm">// Abstract class = template, HINDI pwedeng gumawa ng direct object dito</span>
+<span class="c-cm">// Nagse-set ng rules na DAPAT sundin ng child classes</span>
+<span class="c-kw">abstract class</span> <span class="c-fn">Payment</span> {
+
+    <span class="c-cm">// Abstract method = walang body/implementation dito</span>
+    <span class="c-cm">// OBLIGADO ang child class na mag-implement nito</span>
+    <span class="c-kw">abstract public function</span> <span class="c-fn">processPayment</span>();
+}
+
+<span class="c-cm">// Child class - nag-e-extend at nag-iimplement ng abstract method</span>
+<span class="c-kw">class</span> <span class="c-fn">GCash</span> <span class="c-kw">extends</span> <span class="c-fn">Payment</span> {
+
+    <span class="c-cm">// Kailangan TALAGANG ilagay ito — kung wala, mag-eerror ang PHP</span>
+    <span class="c-kw">public function</span> <span class="c-fn">processPayment</span>() {
+        <span class="c-echo">echo</span> <span class="c-str">"Processing GCash payment."</span>;
+    }
+}
+
+<span class="c-cm">// "new Payment()" = ERROR! Abstract class hindi pwedeng i-instantiate</span>
+<span class="c-cm">// Gamitin ang child class:</span>
+$g = <span class="c-kw">new</span> <span class="c-fn">GCash</span>();
+$g-><span class="c-fn">processPayment</span>(); <span class="c-cm">// Output: Processing GCash payment.</span>
+<span class="c-kw">?&gt;</span></pre>
+      </div>
+    </div>
+
+  </div>
 </div>
 
-<!-- ══════════════════════════════════════════ -->
-<!-- SECTION II: CONVERSIONS                    -->
-<!-- ══════════════════════════════════════════ -->
-<div class="section">
-  <div class="section-header">
-    <span class="section-num">SECTION II</span>
-    <span class="section-title">NUMBER CONVERSION</span>
-  </div>
-
-  <!-- Problem 1: 310 decimal -->
-  <div class="conv-block">
-    <div class="conv-title">Convert <code>310<sub>10</sub></code> → Binary · Octal · Hexadecimal</div>
-
-    <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:12px;letter-spacing:0.1em;">STEP 1 — REPEATED DIVISION BY 2 (Binary)</div>
-    <div class="conv-steps">
-      <div class="conv-step-header">STEP</div><div class="conv-step-header">OPERATION</div><div class="conv-step-header">QUOTIENT</div><div class="conv-step-header">REMAINDER</div>
-      <div class="conv-step-cell">1</div><div class="conv-step-cell">310 ÷ 2</div><div class="conv-step-cell">155</div><div class="conv-step-cell">0</div>
-      <div class="conv-step-cell">2</div><div class="conv-step-cell">155 ÷ 2</div><div class="conv-step-cell">77</div><div class="conv-step-cell">1</div>
-      <div class="conv-step-cell">3</div><div class="conv-step-cell">77 ÷ 2</div><div class="conv-step-cell">38</div><div class="conv-step-cell">1</div>
-      <div class="conv-step-cell">4</div><div class="conv-step-cell">38 ÷ 2</div><div class="conv-step-cell">19</div><div class="conv-step-cell">0</div>
-      <div class="conv-step-cell">5</div><div class="conv-step-cell">19 ÷ 2</div><div class="conv-step-cell">9</div><div class="conv-step-cell">1</div>
-      <div class="conv-step-cell">6</div><div class="conv-step-cell">9 ÷ 2</div><div class="conv-step-cell">4</div><div class="conv-step-cell">1</div>
-      <div class="conv-step-cell">7</div><div class="conv-step-cell">4 ÷ 2</div><div class="conv-step-cell">2</div><div class="conv-step-cell">0</div>
-      <div class="conv-step-cell">8</div><div class="conv-step-cell">2 ÷ 2</div><div class="conv-step-cell">1</div><div class="conv-step-cell">0</div>
-      <div class="conv-step-cell">9</div><div class="conv-step-cell">1 ÷ 2</div><div class="conv-step-cell">0</div><div class="conv-step-cell rem-1">1 ← MSB</div>
-    </div>
-
-    <div class="conv-workings">
-      Read remainders bottom→top: <span>1 0 0 1 1 0 1 1 0</span><br>
-      Binary → Octal (group by 3): <span>100 | 110 | 110</span> = <span>4 6 6</span><br>
-      Binary → Hex (group by 4): <span>0001 | 0011 | 0110</span> = <span>1 3 6</span>
-    </div>
-
-    <div class="conv-results">
-      <div class="conv-result">
-        <div class="conv-result-label">56. Binary</div>
-        <div class="conv-result-val">100110110</div>
-      </div>
-      <div class="conv-result">
-        <div class="conv-result-label">58. Octal</div>
-        <div class="conv-result-val">466</div>
-      </div>
-      <div class="conv-result">
-        <div class="conv-result-label">59. Hexadecimal</div>
-        <div class="conv-result-val">136</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Problem 2: 101111111 binary -->
-  <div class="conv-block">
-    <div class="conv-title">Convert <code>101111111<sub>2</sub></code> → Decimal · Octal · Hexadecimal</div>
-
-    <div class="conv-workings">
-      <b style="color:var(--text)">Binary → Decimal (positional weights):</b><br>
-      1×2⁸ + 0×2⁷ + 1×2⁶ + 1×2⁵ + 1×2⁴ + 1×2³ + 1×2² + 1×2¹ + 1×2⁰<br>
-      = <span>256</span> + 0 + <span>64</span> + <span>32</span> + <span>16</span> + <span>8</span> + <span>4</span> + <span>2</span> + <span>1</span> = <span>383</span><br><br>
-      <b style="color:var(--text)">Binary → Octal (group by 3 from right):</b><br>
-      <span>101</span> | <span>111</span> | <span>111</span> → 5 · 7 · 7<br><br>
-      <b style="color:var(--text)">Binary → Hex (group by 4 from right):</b><br>
-      <span>0001</span> | <span>0111</span> | <span>1111</span> → 1 · 7 · F
-    </div>
-
-    <div class="conv-results">
-      <div class="conv-result">
-        <div class="conv-result-label">59. Decimal</div>
-        <div class="conv-result-val">383</div>
-      </div>
-      <div class="conv-result">
-        <div class="conv-result-label">61. Octal</div>
-        <div class="conv-result-val">577</div>
-      </div>
-      <div class="conv-result">
-        <div class="conv-result-label">62. Hexadecimal</div>
-        <div class="conv-result-val">17F</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════ -->
-<!-- SECTION III: OPERATIONS                    -->
-<!-- ══════════════════════════════════════════ -->
-<div class="section">
-  <div class="section-header">
-    <span class="section-num">SECTION III</span>
-    <span class="section-title">BINARY &amp; HEX OPERATIONS</span>
-  </div>
-
-  <div class="ops-grid">
-
-    <div class="op-card">
-      <div class="op-num">// Q62 — Binary Addition</div>
-      <div class="op-expr">110001 + 111111</div>
-      <div class="op-work">  1 1 0 0 0 1
-+ 1 1 1 1 1 1
-─────────────
-1 1 1 0 0 0 0</div>
-      <div class="op-answer">1110000</div>
-    </div>
-
-    <div class="op-card">
-      <div class="op-num">// Q63 — Binary Addition</div>
-      <div class="op-expr">100110 + 101111</div>
-      <div class="op-work">  1 0 0 1 1 0
-+ 1 0 1 1 1 1
-─────────────
-1 0 1 0 1 0 1</div>
-      <div class="op-answer">1010101</div>
-    </div>
-
-    <div class="op-card">
-      <div class="op-num">// Q64 — Binary Addition</div>
-      <div class="op-expr">101111 + 111100</div>
-      <div class="op-work">  1 0 1 1 1 1
-+ 1 1 1 1 0 0
-─────────────
-1 1 0 1 0 1 1</div>
-      <div class="op-answer">1101011</div>
-    </div>
-
-    <div class="op-card">
-      <div class="op-num">// Q65 — Binary Subtraction</div>
-      <div class="op-expr">101111 − 111100</div>
-      <div class="op-work">  101111  (= 47)
-− 111100  (= 60)
-─────────────
-47 − 60 = −13</div>
-      <div class="op-answer">−1101 (negative result)</div>
-    </div>
-
-    <div class="op-card">
-      <div class="op-num">// Q66 — Binary Subtraction</div>
-      <div class="op-expr">101011 − 001101</div>
-      <div class="op-work">  101011  (= 43)
-− 001101  (= 13)
-─────────────
-  011110</div>
-      <div class="op-answer">011110 (= 30)</div>
-    </div>
-
-    <div class="op-card">
-      <div class="op-num">// Q67 — Binary Subtraction</div>
-      <div class="op-expr">100011 − 100011</div>
-      <div class="op-work">  100011
-− 100011
-─────────────
-  000000</div>
-      <div class="op-answer">000000 (= 0)</div>
-    </div>
-
-    <div class="op-card">
-      <div class="op-num">// Q68 — Hex Addition</div>
-      <div class="op-expr">9EF5 + 97BA</div>
-      <div class="op-work">  9EF5
-+ 97BA
-──────
-5+A=F
-F+B=1A → A, c:1
-E+7+1=16 → 6, c:1
-9+9+1=13 → 3, c:1</div>
-      <div class="op-answer">136AF</div>
-    </div>
-
-    <div class="op-card">
-      <div class="op-num">// Q69 — Hex Addition</div>
-      <div class="op-expr">33F2 + 3A11</div>
-      <div class="op-work">  33F2
-+ 3A11
-──────
-2+1=3
-F+1=10 → 0, c:1
-3+A+1=E
-3+3=6</div>
-      <div class="op-answer">6E03</div>
-    </div>
-
-    <div class="op-card">
-      <div class="op-num">// Q70 — Hex Subtraction</div>
-      <div class="op-expr">140DD − 690D</div>
-      <div class="op-work">  140DD
-−  690D
-───────
-D−D=0
-D−0=D
-0−9 (borrow)→7
-4−6 (borrow)→D
-1→0 carry adj.</div>
-      <div class="op-answer">D7D0</div>
-    </div>
-
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════ -->
-<!-- SECTION IV: 2's COMPLEMENT                 -->
-<!-- ══════════════════════════════════════════ -->
-<div class="section">
-  <div class="section-header">
-    <span class="section-num">SECTION IV</span>
-    <span class="section-title">2's COMPLEMENT — 12-BIT</span>
-  </div>
-
-  <div class="comp-method">
-    <span class="step">METHOD:</span> &nbsp;
-    (1) Convert decimal → 12-bit binary &nbsp;→&nbsp;
-    (2) Invert all bits (1's complement) &nbsp;→&nbsp;
-    (3) Add 1 &nbsp;=&nbsp; <span class="step">2's complement</span>
-  </div>
-
-  <div style="background:var(--card);border:1px solid var(--border);border-radius:4px;overflow:hidden;">
-    <table class="comp-table">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Decimal</th>
-          <th>12-bit Binary (Q71/73/75/77)</th>
-          <th>1's Complement</th>
-          <th>2's Complement (Q72/74/76/78)</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>1</td>
-          <td>356</td>
-          <td class="answer">000101100100</td>
-          <td style="color:var(--muted)">111010011011</td>
-          <td class="answer">111010011100</td>
-        </tr>
-        <tr>
-          <td>2</td>
-          <td>64</td>
-          <td class="answer">000001000000</td>
-          <td style="color:var(--muted)">111110111111</td>
-          <td class="answer">111111000000</td>
-        </tr>
-        <tr>
-          <td>3</td>
-          <td>500</td>
-          <td class="answer">000111110100</td>
-          <td style="color:var(--muted)">111000001011</td>
-          <td class="answer">111000001100</td>
-        </tr>
-        <tr>
-          <td>4</td>
-          <td>35</td>
-          <td class="answer">000000100011</td>
-          <td style="color:var(--muted)">111111011100</td>
-          <td class="answer">111111011101</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════ -->
-<!-- SECTION V: ASCII                           -->
-<!-- ══════════════════════════════════════════ -->
-<div class="section">
-  <div class="section-header">
-    <span class="section-num">SECTION V</span>
-    <span class="section-title">CHARACTER REPRESENTATION (ASCII)</span>
-  </div>
-
-  <div class="ascii-note">
-    <span>NOTE:</span> The specific codes from your exam sheet were not fully visible in the scan. Use this complete reference table to look up any decimal or hex ASCII value. &nbsp;·&nbsp; <span>A=65 (41h) &nbsp;·&nbsp; a=97 (61h) &nbsp;·&nbsp; 0=48 (30h) &nbsp;·&nbsp; Space=32 (20h)</span>
-  </div>
-
-  <div class="ascii-grid">
-
-    <div class="ascii-block">
-      <div class="ascii-block-title">ASCII — DECIMAL CODES</div>
-      <table class="ascii-table">
-        <thead><tr><th>Decimal</th><th>Description</th><th>Char</th></tr></thead>
-        <tbody>
-          <tr><td>32</td><td>Space</td><td>(sp)</td></tr>
-          <tr><td>33</td><td>Exclamation</td><td>!</td></tr>
-          <tr><td>48–57</td><td>Digits</td><td>0–9</td></tr>
-          <tr><td>65</td><td>Uppercase A</td><td>A</td></tr>
-          <tr><td>66</td><td>Uppercase B</td><td>B</td></tr>
-          <tr><td>67</td><td>Uppercase C</td><td>C</td></tr>
-          <tr><td>68</td><td>Uppercase D</td><td>D</td></tr>
-          <tr><td>69</td><td>Uppercase E</td><td>E</td></tr>
-          <tr><td>70</td><td>Uppercase F</td><td>F</td></tr>
-          <tr><td>71</td><td>Uppercase G</td><td>G</td></tr>
-          <tr><td>72</td><td>Uppercase H</td><td>H</td></tr>
-          <tr><td>73</td><td>Uppercase I</td><td>I</td></tr>
-          <tr><td>74</td><td>Uppercase J</td><td>J</td></tr>
-          <tr><td>75</td><td>Uppercase K</td><td>K</td></tr>
-          <tr><td>76</td><td>Uppercase L</td><td>L</td></tr>
-          <tr><td>77</td><td>Uppercase M</td><td>M</td></tr>
-          <tr><td>78</td><td>Uppercase N</td><td>N</td></tr>
-          <tr><td>79</td><td>Uppercase O</td><td>O</td></tr>
-          <tr><td>80</td><td>Uppercase P</td><td>P</td></tr>
-          <tr><td>81–90</td><td>Q through Z</td><td>Q–Z</td></tr>
-          <tr><td>97–122</td><td>Lowercase a–z</td><td>a–z</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="ascii-block">
-      <div class="ascii-block-title">ASCII — HEXADECIMAL CODES</div>
-      <table class="ascii-table">
-        <thead><tr><th>Hex</th><th>Description</th><th>Char</th></tr></thead>
-        <tbody>
-          <tr><td>20</td><td>Space</td><td>(sp)</td></tr>
-          <tr><td>21</td><td>Exclamation</td><td>!</td></tr>
-          <tr><td>30–39</td><td>Digits</td><td>0–9</td></tr>
-          <tr><td>41</td><td>Uppercase A</td><td>A</td></tr>
-          <tr><td>42</td><td>Uppercase B</td><td>B</td></tr>
-          <tr><td>43</td><td>Uppercase C</td><td>C</td></tr>
-          <tr><td>44</td><td>Uppercase D</td><td>D</td></tr>
-          <tr><td>45</td><td>Uppercase E</td><td>E</td></tr>
-          <tr><td>46</td><td>Uppercase F</td><td>F</td></tr>
-          <tr><td>47</td><td>Uppercase G</td><td>G</td></tr>
-          <tr><td>48</td><td>Uppercase H</td><td>H</td></tr>
-          <tr><td>49</td><td>Uppercase I</td><td>I</td></tr>
-          <tr><td>4A</td><td>Uppercase J</td><td>J</td></tr>
-          <tr><td>4B</td><td>Uppercase K</td><td>K</td></tr>
-          <tr><td>4C</td><td>Uppercase L</td><td>L</td></tr>
-          <tr><td>4D</td><td>Uppercase M</td><td>M</td></tr>
-          <tr><td>4E</td><td>Uppercase N</td><td>N</td></tr>
-          <tr><td>4F</td><td>Uppercase O</td><td>O</td></tr>
-          <tr><td>50</td><td>Uppercase P</td><td>P</td></tr>
-          <tr><td>51–5A</td><td>Q through Z</td><td>Q–Z</td></tr>
-          <tr><td>61–7A</td><td>Lowercase a–z</td><td>a–z</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-  </div>
-</div>
-
-</div><!-- /container -->
-
-<div class="footer">
-  COMPUTER ARCHITECTURE &amp; ORGANIZATION &nbsp;·&nbsp; ANSWER KEY &nbsp;·&nbsp;
-  <span>CORRECT ANSWERS HIGHLIGHTED IN RED</span>
-</div>
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
 
 <script>
-const mcData = [
-  [1,  "A group of bits that tell the computer to perform a specific operation is known as:",
-    ["A. Instruction code","B. Micro operation","C. Accumulator","D. Register"], "A",
-    "A group of bits that tells the CPU what operation to perform is an instruction code."],
-  [2,  "Which defines a computer operation performed based on bits received?",
-    ["A. Memory Address","B. Operation Code","C. Bit Rate","D. Data Packet"], "B",
-    "An opcode (operation code) defines what operation the CPU performs based on received bits."],
-  [3,  "What is the primary function of an instruction in a computer system?",
-    ["A. To store data","B. To perform operations","C. To send Signals","D. To check errors"], "B",
-    "The primary function of an instruction is to direct the CPU to perform a specific operation."],
-  [4,  "A register capable of shifting its bits either left or right is called:",
-    ["A. Parallel register","B. Sequence register","C. Shift register","D. Storage register"], "C",
-    "A shift register can move its stored bits left or right by one position per clock pulse."],
-  [5,  "Computers use addressing mode technique for:",
-    ["A. Programming versatility (pointers, flexible programming)","B. Reduce number of bits in instruction field","C. Specifying rules for interpreting address field","D. All of the choices"], "D",
-    "Addressing modes serve all three purposes simultaneously."],
-  [6,  "Which addressing mode allows accessing memory locations directly using a constant value?",
-    ["A. Immediate addressing mode","B. Direct addressing mode","C. Indirect addressing mode","D. Register addressing mode"], "B",
-    "Direct addressing embeds a constant memory address in the instruction to access data directly."],
-  [7,  "Why are different addressing modes necessary in computer architecture?",
-    ["A. To increase power consumption","B. To simplify hardware design","C. To enable various methods of data access","D. Ensure only one data type can be processed"], "C",
-    "Different addressing modes give the CPU flexibility in how it retrieves operands."],
-  [8,  "Which addressing technique directly determines the contents of memory location?",
-    ["A. Register Addressing","B. Base Addressing","C. Indirect Addressing","D. Direct Addressing"], "D",
-    "Direct addressing uses the address field to directly identify the memory location's contents."],
-  [9,  "What is the purpose of addressing technique in CPU operations?",
-    ["A. To identify memory locations","B. To increase processing speed","C. To enhance graphics performance","D. To improve battery life"], "A",
-    "The primary purpose of addressing techniques is to identify and locate memory addresses."],
-  [10, "The operation executed on data and stored in the register is called:",
-    ["A. Macro operation","B. Micro operation","C. Bit operation","D. Byte operation"], "B",
-    "Micro operations are the elementary register-level operations executed by the CPU."],
-  [11, "A binary digit is called:",
-    ["A. Byte","B. Register","C. Bit","D. Character"], "C",
-    "A single binary digit (0 or 1) is called a bit — short for binary digit."],
-  [12, "What additional bus is involved in microcomputer communication alongside the address bus?",
-    ["A. I/O Bus","B. Data Bus","C. Control lines","D. Signal Bus"], "B",
-    "The data bus works alongside the address bus to carry actual data between components."],
-  [13, "What is the primary role of the data bus in a microcomputer architecture?",
-    ["A. To store data","B. To power components","C. To manage graphics","D. To transmit data"], "D",
-    "The data bus transmits data between the CPU, memory, and peripheral devices."],
-  [14, "This register is incremented to keep track of the next instruction's memory address:",
-    ["A. Instruction Register","B. Memory Address Register","C. Program Counter Register","D. Status Register"], "C",
-    "The Program Counter (PC) increments after each fetch to point to the next instruction."],
-  [15, "The contents of program counter are sent to the _____ register:",
-    ["A. Instruction Register","B. Memory Address Register","C. Program Counter Register","D. Status Register"], "B",
-    "PC contents are transferred to the MAR so the CPU can fetch the instruction at that address."],
-  [16, "Which register receives the contents of the Program Counter during program execution?",
-    ["A. Instruction Register","B. Memory Address Register","C. Program Counter Register","D. Status Register"], "B",
-    "The Memory Address Register receives the PC's value to initiate a memory fetch."],
-  [17, "What is the function of the Memory Address Register in relation to the Program Counter?",
-    ["A. It stores the next instruction to be executed","B. It holds the results from arithmetic operations","C. It contains directories of data in memory","D. It temporarily holds addresses from the program counter"], "D",
-    "The MAR acts as a buffer, temporarily holding the address provided by the PC for memory access."],
-  [18, "What happens to the Program Counter after its contents are sent to the Memory Address Register?",
-    ["A. It resets to zero","B. It increments to point to the next instruction","C. It gets stored in the Accumulator","D. It remains unchanged"], "B",
-    "After sending its address to the MAR, the PC increments to prepare for the next instruction."],
-  [19, "What is the main function of the Program Counter in the CPU?",
-    ["A. To hold data","B. To store instructions","C. To manage memory","D. To track the execution sequence"], "D",
-    "The PC tracks which instruction executes next, maintaining sequential program flow."],
-  [20, "The instruction in memory at this address is returned to the _____ register:",
-    ["A. Memory Buffer Register","B. Memory Address Register","C. Instruction Register","D. Accumulator"], "A",
-    "The fetched instruction is placed in the Memory Buffer Register (MBR/MDR) from memory."],
-  [21, "What is the role of the instruction register in the CPU?",
-    ["A. Stores data","B. Manages CPU power","C. Directs the output","D. Holds the instruction for execution"], "D",
-    "The Instruction Register holds the current instruction being decoded and executed."],
-  [22, "Results of comparisons, interrupts or overflow errors are recorded in the _____ register:",
-    ["A. Program counter register","B. Status register","C. Memory Data Register","D. Address Register"], "B",
-    "The Status Register stores condition flags like zero, carry, overflow, and interrupt flags."],
-  [23, "What is the main function of a status register in a CPU?",
-    ["A. To store general data","B. To hold the current instruction","C. To record the state of the CPU","D. To manage memory addresses"], "C",
-    "The status register records the current state of the CPU via condition flags."],
-  [24, "The speed of the computer is depended on the _____?",
-    ["A. RAM","B. Cache","C. CPU","D. Storage"], "C",
-    "Overall computer speed primarily depends on the CPU's clock speed, architecture, and cache."],
-  [25, "The L1 Cache is faster than L3 Cache:",
-    ["A. True","B. False"], "A",
-    "L1 cache is the fastest and closest to the CPU core; L3 is larger but slower."],
-  [26, "The CPU speed is measured in?",
-    ["A. Bits","B. Bits per second","C. Hertz","D. Bytes"], "C",
-    "CPU clock speed is measured in Hertz (Hz), typically GHz in modern processors."],
-  [27, "The CPU is made up of 3 main parts: ALU, Control Unit and _____:",
-    ["A. Processor","B. Motherboard","C. RAM","D. Registers"], "D",
-    "The three main CPU components are the ALU, Control Unit, and Registers."],
-  [28, "The type of register that holds data to be operated upon, intermediate and final results:",
-    ["A. Program Counter","B. Accumulator","C. Instruction Register","D. Memory Address Register"], "B",
-    "The accumulator holds operands, intermediate values, and final results of computations."],
-  [29, "A small high speed storage location within the CPU that holds data being processed:",
-    ["A. Memory","B. Bus","C. Register","D. Cache"], "C",
-    "Registers are small, ultra-fast storage locations inside the CPU itself."],
-  [30, "Holds frequently requested data and instructions immediately available to the CPU:",
-    ["A. Memory","B. Bus","C. Register","D. Cache"], "D",
-    "Cache memory stores frequently used data to provide fast CPU access, reducing main memory trips."],
-  [31, "What is the primary function of cache memory in boosting CPU performance?",
-    ["A. To store rarely accessed data","B. To increase RAM capacity","C. To boost CPU speed","D. To manage I/O operations"], "C",
-    "Cache provides fast access to frequently used data, effectively boosting CPU speed."],
-  [32, "How does cache improve system performance?",
-    ["A. By reducing latency","B. By increasing power consumption","C. By performing complex calculations","D. By acting as a backup"], "A",
-    "Cache improves performance by reducing memory access latency — data is retrieved faster."],
-  [33, "The type of registers used for high speed temporary storage of program variables:",
-    ["A. Special-purpose register","B. General-purpose register","C. Instruction register","D. Status register"], "B",
-    "General-purpose registers store program variables and intermediate values at high speed."],
-  [34, "How does the size of L1 cache compare to L2 cache?",
-    ["A. L1 cache can be larger than L2","B. L1 cache is equal in size to L2","C. L1 cache is not related to L2","D. L1 cache is usually smaller than L2"], "D",
-    "L1 is fastest but smallest; L2 is larger and slightly slower; L3 is even larger but slower."],
-  [35, "Cache size is crucial for CPU performance because:",
-    ["A. It determines the maximum processing speed","B. It affects the data retrieval speed","C. It influences the overall power consumption","D. It has no impact on performance"], "B",
-    "Cache size determines how much data can be stored near the CPU, directly affecting retrieval speed."],
-  [36, "In computing, which memory type is typically faster than main memory?",
-    ["A. RAM","B. Cache memory","C. Hard drive","D. Flash memory"], "B",
-    "Cache memory (SRAM) is faster than main memory (DRAM) due to proximity to the CPU and technology."],
-  [37, "A compiler is a translating program which:",
-    ["A. Translates instructions of high-level language to machine language","B. Translates entire source program into machine language","C. It is not involved in program execution","D. All of the choices"], "D",
-    "A compiler does all of these: translates HLL to machine code, processes the entire program."],
-  [38, "Virtually all contemporary computer designs are based on concepts developed by _____ at Princeton:",
-    ["A. Harvard architecture","B. John Von Neumann","C. John V. Mauchly","D. J. Presper Eckert"], "B",
-    "John Von Neumann developed the stored-program computer architecture at Princeton's IAS."],
-  [39, "The Von Neumann architecture is based on which concept?",
-    ["A. Data and instructions stored in single read-write memory","B. Memory contents addressable by location","C. Execution occurs in a sequential fashion","D. All of the choices"], "D",
-    "Von Neumann architecture incorporates all three: shared memory, addressable locations, sequential execution."],
-  [40, "The Von Neumann architecture is based on which concept?",
-    ["A. Both data and program instructions stored in same memory","B. A single bus for data, addresses, and control signals","C. Execution occurs in a sequential fashion","D. All of the choices"], "D",
-    "All apply to Von Neumann: shared memory, single bus (causing the bottleneck), sequential flow."],
-  [41, "Which architecture refers to combining multiple simple commands into one complex instruction?",
-    ["A. Harvard Architecture","B. CISC","C. RISC","D. ARM"], "B",
-    "CISC (Complex Instruction Set Computer) uses complex instructions that combine multiple operations."],
-  [42, "The use of multiple processors on the same chip is referred to as _____:",
-    ["A. CPU","B. Processor","C. Multicore","D. GPU"], "C",
-    "Multicore processors integrate multiple CPU cores on one chip, increasing parallel performance."],
-  [43, "One increment, or pulse of a clock is referred to as _____:",
-    ["A. Hertz","B. Speed metric","C. Clock Cycle","D. Throughout"], "C",
-    "A single clock pulse is called a clock cycle — the basic unit of CPU timing."],
-  [44, "A bus that connects major computer components (processor, memory, I/O):",
-    ["A. System Bus","B. Data Bus","C. Control Bus","D. Address Bus"], "A",
-    "The system bus is the main communication pathway connecting the CPU, memory, and I/O."],
-  [45, "It determines how many bits the CPU can handle at once:",
-    ["A. Bus Width","B. Clock Speed","C. Instruction per cycle","D. All of the choices"], "A",
-    "Bus width defines the number of parallel data lines, determining how many bits transfer simultaneously."],
-  [46, "Computer _____ refers to those attributes that have a direct impact on the logical execution of a program:",
-    ["A. Organization","B. Architecture"], "B",
-    "Architecture covers attributes visible to the programmer that affect program execution logic."],
-  [47, "Computer _____ attributes include hardware details transparent to the programmer:",
-    ["A. Organization","B. Architecture"], "A",
-    "Organization covers implementation details (circuits, signals) that are invisible to the programmer."],
-  [48, "Which generation of computer used VLSI technology?",
-    ["A. Fifth Generation","B. Second Generation","C. Third Generation","D. Fourth Generation"], "D",
-    "Fourth Generation computers (1970s–80s) used VLSI chips, enabling personal computers."],
-  [49, "Which of the following computer memory is fastest?",
-    ["A. Hard disk","B. Register","C. RAM","D. None of the choices"], "B",
-    "Registers are the fastest memory — they sit inside the CPU and operate at CPU clock speed."],
-  [50, "The collection of 8-bits is called as:",
-    ["A. Byte","B. Nibble","C. Word","D. Record"], "A",
-    "8 bits = 1 byte. (4 bits = nibble; word size varies by architecture.)"],
-  [51, "What does a computer bus line consist of?",
-    ["A. Registers","B. Accumulators","C. Set of parallel lines","D. None of the Choices"], "C",
-    "A bus is a set of parallel electrical lines that carry signals between components."],
-  [52, "The main virtue for using single Bus structure is _____:",
-    ["A. Fast data transfer","B. Cost Effective connectivity and speed","C. Fast data retrieval","D. Cost effective connectivity and ease of attaching peripheral devices"], "D",
-    "Single bus structures are simple and cost-effective, making it easy to connect peripherals."],
-  [53, "What unit synchronizes CPU operations using clock pulses?",
-    ["A. ALU","B. Control Unit","C. Clock","D. Cache"], "C",
-    "The clock generates regular pulses that synchronize all CPU operations and timing."],
-  [54, "The main purpose of ISA is to_____:",
-    ["A. Design circuits","B. Increase hardware cost","C. Act as an interface between hardware and software","D. Replace the operating system"], "C",
-    "ISA (Instruction Set Architecture) defines the interface between hardware and software layers."],
-];
-
-const container = document.getElementById('mc-container');
-mcData.forEach(([num, q, opts, ans, explain]) => {
-  const card = document.createElement('div');
-  card.className = 'mc-card';
-  const optsHtml = opts.map(o => {
-    const letter = o.charAt(0);
-    const isCorrect = letter === ans;
-    return `<div class="mc-option${isCorrect ? ' correct' : ''}">${o}</div>`;
-  }).join('');
-  card.innerHTML = `
-    <div class="mc-qnum">// QUESTION ${num}</div>
-    <div class="mc-options">${optsHtml}</div>
-    <div class="mc-explain">${explain}</div>
-  `;
-  container.appendChild(card);
-});
+  function showSection(id, tabEl) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    tabEl.classList.add('active');
+    const idx = ['p1','p2','p3','p4'].indexOf(id);
+    document.getElementById('progress').style.width = ((idx + 1) * 25) + '%';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function toggle(btn) {
+    const box = btn.nextElementSibling;
+    const isShown = box.classList.contains('show');
+    box.classList.toggle('show');
+    btn.textContent = isShown ? '▶ Show Answer' : '▼ Hide Answer';
+  }
+  function revealAll(sectionId) {
+    document.querySelectorAll('#' + sectionId + ' .answer-box').forEach(box => box.classList.add('show'));
+    document.querySelectorAll('#' + sectionId + ' .answer-toggle').forEach(btn => btn.textContent = '▼ Hide Answer');
+  }
 </script>
-
 </body>
 </html>
