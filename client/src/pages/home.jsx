@@ -1,10 +1,13 @@
-
 import React from 'react';
-import Result from '../assets/updated-resume.pdf';
+// import Result from '../assets/updated-resume.pdf';
 
-function home() {
-    const handleCvClick = () => {
-        window.open(Result, '_blank');
+function Home() {
+    // const handleCvClick = () => {
+    //     window.open(Result, '_blank');
+    // };
+
+    const handleAnswerKeyClick = () => {
+        window.open('/answerkey.html', '_blank');
     };
 
     return (
@@ -23,11 +26,18 @@ function home() {
                         Student Developer
                     </p>
                     
-                    <button 
+                    {/* <button 
                         onClick={handleCvClick}
                         className="inline-flex items-center px-6 py-3 border border-white text-white font-light hover:bg-white hover:text-black transition-colors duration-300"
                     >
                         View My CV
+                    </button> */}
+
+                    <button 
+                        onClick={handleAnswerKeyClick}
+                        className="inline-flex items-center px-6 py-3 border border-white text-white font-light hover:bg-white hover:text-black transition-colors duration-300"
+                    >
+                        View Answer Key
                     </button>
                 </div>
             </div>
@@ -35,4 +45,4 @@ function home() {
     );
 }
 
-export default home;
+export default Home;
