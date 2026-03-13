@@ -37,7 +37,7 @@ function Home() {
                         onClick={handleAnswerKeyClick}
                         className="inline-flex items-center px-6 py-3 border border-white text-white font-light hover:bg-white hover:text-black transition-colors duration-300"
                     >
-                        View Answer Key
+                        View Resume
                     </button>
                 </div>
             </div>
