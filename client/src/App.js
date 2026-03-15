@@ -8,7 +8,7 @@ import Projects from './pages/projects';
 import Contact from './pages/contact';
 import Services from './pages/services';
 import Post from './pages/post';
-import Snowfall from "react-snowfall";
+// import Snowfall from "react-snowfall";
 
 import Home from './pages/home';
 
@@ -18,10 +18,10 @@ function App() {
   return (
 
   <div>
-      <Snowfall
+      {/* <Snowfall
         color="white"
         snowflakeCount={150}
-      />
+      /> */}
     <nav>
       <Navbar />
     </nav>

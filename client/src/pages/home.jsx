@@ -1,14 +1,14 @@
 import React from 'react';
-// import Result from '../assets/updated-resume.pdf';
+import Result from '../assets/updated-resume.pdf';
 
 function Home() {
-    // const handleCvClick = () => {
-    //     window.open(Result, '_blank');
-    // };
-
-    const handleAnswerKeyClick = () => {
-        window.open('/answerkey.html', '_blank');
+    const handleCvClick = () => {
+        window.open(Result, '_blank');
     };
+
+    // const handleAnswerKeyClick = () => {
+    //     window.open('/answerkey.html', '_blank');
+    // };
 
     return (
         <div className="min-h-screen flex items-center justify-center px-8" style={{backgroundColor: 'rgba(0, 0, 0, 0.9)'}}>
@@ -26,19 +26,19 @@ function Home() {
                         Student Developer
                     </p>
                     
-                    {/* <button 
+                    <button 
                         onClick={handleCvClick}
                         className="inline-flex items-center px-6 py-3 border border-white text-white font-light hover:bg-white hover:text-black transition-colors duration-300"
                     >
                         View My CV
-                    </button> */}
+                    </button>
 
-                    <button 
+                    {/* <button 
                         onClick={handleAnswerKeyClick}
                         className="inline-flex items-center px-6 py-3 border border-white text-white font-light hover:bg-white hover:text-black transition-colors duration-300"
                     >
                         View Resume
-                    </button>
+                    </button> */}
                 </div>
             </div>
         </div>
