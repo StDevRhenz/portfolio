@@ -2,340 +2,457 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Gesture KNN — Live Recognition + Analytics</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<title>Gesture KNN</title>
 <script src="https://unpkg.com/konva@9/konva.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
 <style>
+/* ╔══════════════════════════════════════════════════════════════╗
+   ║  DESIGN TOKENS                                               ║
+   ╚══════════════════════════════════════════════════════════════╝ */
 :root{
-  --bg:#05070f;--surface:#0c0f1e;--surface2:#12172b;--border:rgba(255,255,255,.06);--border2:rgba(255,255,255,.12);
-  --text:#e8eaf0;--muted:#5a6080;--muted2:#3a4060;
-  --fire:#f97316;--lightning:#facc15;--water:#38bdf8;--wind:#94a3b8;--portal:#a78bfa;
-  --accent:#a78bfa;--accent2:#7c3aed;
-  --font-display:'Syne',sans-serif;--font-mono:'DM Mono',monospace;
+  --bg:#05070f; --surface:#0c0f1e; --s2:#12172b; --s3:#181e30;
+  --b1:rgba(255,255,255,.06); --b2:rgba(255,255,255,.13); --b3:rgba(255,255,255,.22);
+  --text:#e8eaf0; --muted:#5a6080; --dim:#2e3450;
+  --accent:#a78bfa; --accent-bg:rgba(167,139,250,.12);
+  --fire:#f97316; --lightning:#facc15; --water:#38bdf8; --wind:#94a3b8; --portal:#a78bfa;
+  --fd:'Syne',sans-serif; --fm:'DM Mono',monospace;
+  --r:10px; --rl:14px; --rxl:18px;
+  --sb-w:272px; --tab-h:44px;
+  --sp-xs:6px; --sp-sm:10px; --sp-md:14px; --sp-lg:20px; --sp-xl:26px;
 }
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font-mono)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--fm);-webkit-font-smoothing:antialiased;text-size-adjust:100%}
 ::selection{background:rgba(167,139,250,.25)}
 ::-webkit-scrollbar{width:3px;height:3px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--muted2);border-radius:2px}
+::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px}
+button{font-family:var(--fm)}
 
-/* ── Layout ── */
-#app{display:flex;height:100vh;overflow:hidden}
-#sidebar{width:280px;flex-shrink:0;height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
-#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+/* ╔═══════════════════╗
+   ║  APP SHELL        ║
+   ╚═══════════════════╝ */
+#app{display:flex;height:100dvh;overflow:hidden;position:relative}
 
-/* ── Sidebar ── */
-.sb-header{padding:20px 20px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
-.sb-logo{font-family:var(--font-display);font-weight:800;font-size:20px;letter-spacing:-.5px;color:var(--text)}
+/* ╔═══════════════════╗
+   ║  SIDEBAR          ║
+   ╚═══════════════════╝ */
+#sidebar{
+  width:var(--sb-w);flex-shrink:0;height:100dvh;
+  background:var(--surface);border-right:1px solid var(--b1);
+  display:flex;flex-direction:column;overflow:hidden;
+  transition:transform .26s cubic-bezier(.4,0,.2,1);
+  will-change:transform;z-index:200;
+}
+#sb-body{flex:1;overflow-y:auto;padding:var(--sp-md) var(--sp-md) 0;overscroll-behavior:contain}
+.sb-sec{margin-bottom:var(--sp-lg)}
+.sb-lbl{font-size:9px;color:var(--muted);letter-spacing:.13em;text-transform:uppercase;margin-bottom:9px;font-family:var(--fd)}
+.sb-hd{padding:var(--sp-md);border-bottom:1px solid var(--b1);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sb-logo{font-family:var(--fd);font-weight:800;font-size:18px;letter-spacing:-.4px;line-height:1.1}
 .sb-logo span{color:var(--accent)}
-.sb-sub{font-size:10px;color:var(--muted);margin-top:3px;letter-spacing:.08em;text-transform:uppercase}
-.sb-body{flex:1;overflow-y:auto;padding:16px}
-.sb-section{margin-bottom:20px}
-.sb-label{font-size:9px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px;font-family:var(--font-display)}
-
-/* Gesture cards */
-.g-card{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);margin-bottom:5px;cursor:pointer;transition:border-color .15s,background .15s}
-.g-card:hover{border-color:var(--border2);background:rgba(255,255,255,.04)}
-.g-card.active{border-color:rgba(167,139,250,.4);background:rgba(167,139,250,.06)}
+.sb-sub{font-size:9px;color:var(--muted);margin-top:2px;letter-spacing:.07em;text-transform:uppercase}
+#sb-close{display:none;background:none;border:1px solid var(--b2);color:var(--muted);cursor:pointer;padding:4px 8px;border-radius:6px;font-size:14px;line-height:1;flex-shrink:0}
+.g-card{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:8px;border:1px solid var(--b1);background:var(--s2);margin-bottom:5px;transition:border-color .15s}
 .g-card canvas{border-radius:5px;background:#080b18;flex-shrink:0}
-.g-card .name{font-family:var(--font-display);font-weight:700;font-size:12px}
-.g-card .hint{font-size:10px;color:var(--muted);margin-top:2px}
+.g-card .nm{font-family:var(--fd);font-weight:700;font-size:12px}
+.g-card .ht{font-size:10px;color:var(--muted);margin-top:1px}
+.k-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.k-val{font-family:var(--fd);font-weight:800;font-size:22px;color:var(--accent)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-track{background:var(--s2);height:4px;border-radius:2px;border:1px solid var(--b2)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;background:var(--accent);border-radius:50%;border:2px solid rgba(167,139,250,.35);margin-top:-6px}
+input[type=range]::-moz-range-track{background:var(--s2);height:4px;border-radius:2px}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;background:var(--accent);border-radius:50%;border:2px solid rgba(167,139,250,.35)}
+.k-hints{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-top:5px}
+.r-card{border-radius:var(--r);padding:13px;border:1px solid var(--b1);background:var(--s2);transition:border-color .3s,background .3s,box-shadow .3s}
+.r-name{font-family:var(--fd);font-weight:800;font-size:18px;color:var(--muted);transition:color .3s;letter-spacing:-.4px}
+.r-meta{font-size:10px;color:var(--muted);margin-top:3px}
+.vrow{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:11px}
+.vbg{flex:1;height:3px;background:var(--dim);border-radius:2px;overflow:hidden}
+.vfill{height:100%;border-radius:2px;transition:width .35s cubic-bezier(.4,0,.2,1)}
+.nb-item{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--b1);font-size:11px}
+.nb-rank{color:var(--dim);width:18px;font-size:10px}
+.sb-ft{padding:var(--sp-sm) var(--sp-md);border-top:1px solid var(--b1);flex-shrink:0}
+.btn-clear{width:100%;padding:9px;border:1px solid var(--b1);border-radius:8px;background:transparent;color:var(--muted);font-size:11px;cursor:pointer;letter-spacing:.06em;transition:background .15s,color .15s,border-color .15s;display:flex;align-items:center;justify-content:center;gap:7px}
+.btn-clear:hover{background:var(--s2);color:var(--text);border-color:var(--b2)}
 
-/* K slider */
-.k-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-.k-val{font-family:var(--font-display);font-weight:800;font-size:22px;color:var(--accent)}
-input[type=range]{-webkit-appearance:none;appearance:none;width:100%;background:transparent}
-input[type=range]::-webkit-slider-track{background:var(--surface2);height:4px;border-radius:2px;border:1px solid var(--border2)}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;background:var(--accent);border-radius:50%;cursor:pointer;border:2px solid rgba(167,139,250,.4);margin-top:-6px}
-.k-hints{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-top:6px;letter-spacing:.04em}
-
-/* Result card */
-.result-card{border-radius:10px;padding:14px;border:1px solid var(--border);background:var(--surface2);transition:border-color .3s,background .3s,box-shadow .3s}
-.result-emoji{font-size:32px;line-height:1}
-.result-name{font-family:var(--font-display);font-weight:800;font-size:20px;color:var(--muted);transition:color .3s;letter-spacing:-.5px}
-.result-meta{font-size:10px;color:var(--muted);margin-top:4px}
-.vote-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:11px}
-.vote-bar-bg{flex:1;height:3px;background:var(--surface2);border-radius:2px;border:1px solid var(--border);overflow:hidden}
-.vote-bar-fill{height:100%;border-radius:2px;transition:width .35s cubic-bezier(.4,0,.2,1)}
-
-/* Neighbors */
-.nb-item{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px}
-.nb-rank{color:var(--muted2);width:18px;font-size:10px}
-.nb-dist{color:var(--muted);font-size:10px;margin-left:auto}
-
-/* Btn */
-.btn-clear{width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--muted);font-size:11px;cursor:pointer;font-family:var(--font-mono);letter-spacing:.06em;transition:background .15s,color .15s,border-color .15s;display:flex;align-items:center;justify-content:center;gap:8px}
-.btn-clear:hover{background:var(--surface2);color:var(--text);border-color:var(--border2)}
-.sb-footer{padding:14px 16px;border-top:1px solid var(--border);flex-shrink:0}
-
-/* ── Top tabs ── */
-#tabs{display:flex;gap:0;border-bottom:1px solid var(--border);flex-shrink:0;padding:0 20px;background:var(--surface)}
-.tab{padding:12px 18px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;font-family:var(--font-display);font-weight:600}
+/* ╔═══════════════════╗
+   ║  MAIN + TABS      ║
+   ╚═══════════════════╝ */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+#topbar{display:flex;align-items:center;border-bottom:1px solid var(--b1);flex-shrink:0;padding:0 var(--sp-md);background:var(--surface);height:var(--tab-h);gap:4px}
+#menu-btn{display:none;background:none;border:none;color:var(--muted);cursor:pointer;padding:0;font-size:20px;line-height:1;flex-shrink:0;margin-right:4px}
+.tab{padding:0 var(--sp-md);font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;height:100%;display:flex;align-items:center;transition:color .15s,border-color .15s;font-family:var(--fd);font-weight:600;white-space:nowrap;user-select:none}
 .tab.on{color:var(--accent);border-bottom-color:var(--accent)}
 .tab:hover:not(.on){color:var(--text)}
 
-/* ── Canvas view ── */
-#view-canvas{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:12px;overflow:hidden}
-#hint-bar{font-size:11px;color:var(--muted);letter-spacing:.06em;display:flex;align-items:center;gap:10px}
-#k-badge{background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.25);color:var(--accent);font-size:10px;padding:2px 10px;border-radius:20px;font-family:var(--font-display);font-weight:700}
-#stage-wrap{border-radius:14px;overflow:hidden;box-shadow:0 0 0 1px rgba(167,139,250,.08),0 0 60px rgba(139,92,246,.1),0 20px 80px rgba(0,0,0,.8)}
+/* ╔═══════════════════╗
+   ║  CANVAS VIEW      ║
+   ╚═══════════════════╝ */
+#view-canvas{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;padding:var(--sp-md);gap:var(--sp-sm)}
+#canvas-area{position:relative;flex-shrink:0;display:flex}
+#hint-bar{font-size:11px;color:var(--muted);letter-spacing:.05em;display:flex;align-items:center;gap:var(--sp-sm);flex-wrap:wrap;justify-content:center;flex-shrink:0}
+#k-badge{background:var(--accent-bg);border:1px solid rgba(167,139,250,.25);color:var(--accent);font-size:10px;padding:2px 10px;border-radius:20px;font-family:var(--fd);font-weight:700;white-space:nowrap}
+#stage-wrap{border-radius:var(--rl);overflow:hidden;box-shadow:0 0 0 1px rgba(167,139,250,.07),0 0 50px rgba(100,60,200,.09),0 16px 60px rgba(0,0,0,.75)}
 .konvajs-content{cursor:crosshair!important}
-#stage-container{touch-action:none}
+#stage-container{touch-action:none;display:block}
 
-/* ── Analytics view ── */
-#view-analytics{flex:1;overflow-y:auto;padding:24px;display:none;gap:20px;flex-direction:column}
-.an-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.an-grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.an-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px}
-.an-card-title{font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;font-family:var(--font-display)}
-.metric-val{font-family:var(--font-display);font-weight:800;font-size:26px;letter-spacing:-.5px}
-.metric-sub{font-size:10px;color:var(--muted);margin-top:4px}
-.metric-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px}
+/* ╔═════════════════════════════════════════════════════════╗
+   ║  LIVE ACCURACY OVERLAY                                  ║
+   ║  Appears bottom-right of canvas after every draw.       ║
+   ╚═════════════════════════════════════════════════════════╝ */
+#acc-overlay{
+  position:absolute;
+  bottom:12px; right:12px;
+  background:rgba(5,7,15,.96);
+  border:1px solid var(--b2);
+  border-radius:var(--rl);
+  padding:14px 16px 12px;
+  min-width:235px; max-width:min(320px,calc(100% - 20px));
+  z-index:30;pointer-events:none;
+  opacity:0;
+  transform:translateY(8px);
+  transition:opacity .24s ease,transform .24s ease;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+}
+#acc-overlay.visible{opacity:1;transform:translateY(0)}
+
+/* Header */
+.ov-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}
+.ov-tag{font-size:9px;color:var(--muted);letter-spacing:.11em;text-transform:uppercase;font-family:var(--fd);margin-bottom:3px}
+.ov-winner{font-family:var(--fd);font-weight:800;font-size:17px;letter-spacing:-.3px;line-height:1.1}
+/* Confidence ring */
+.ov-ring{position:relative;width:46px;height:46px;flex-shrink:0}
+.ov-ring svg{transform:rotate(-90deg);overflow:visible}
+.ov-ring-val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:10px;font-weight:700}
+.ov-conf-tag{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.09em;margin-top:2px;text-align:center}
+/* Probability bars */
+.ov-bars{display:flex;flex-direction:column;gap:4px;margin-bottom:11px}
+.ov-row{display:flex;align-items:center;gap:7px}
+.ov-cls{font-size:10px;width:72px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ov-cls.w{font-weight:700}
+.ov-bg{flex:1;height:5px;background:rgba(255,255,255,.04);border-radius:3px;overflow:hidden;border:1px solid rgba(255,255,255,.06)}
+.ov-fill{height:100%;border-radius:3px;transition:width .45s cubic-bezier(.4,0,.2,1)}
+.ov-pct{width:30px;text-align:right;font-weight:700;font-size:10px;font-family:var(--fd)}
+/* Stats row */
+.ov-stats{border-top:1px solid var(--b1);padding-top:8px;display:flex;gap:12px;flex-wrap:wrap}
+.ov-stat{font-size:9px;color:var(--muted);white-space:nowrap}
+.ov-stat b{color:rgba(232,234,240,.8);font-weight:600}
+
+/* ╔═══════════════════╗
+   ║  ANALYTICS VIEW   ║
+   ╚═══════════════════╝ */
+#view-analytics{flex:1;overflow-y:auto;padding:var(--sp-lg);display:none;flex-direction:column;gap:var(--sp-md);overscroll-behavior:contain}
+.an-g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--sp-sm)}
+.an-g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--sp-md)}
+.an-card{background:var(--surface);border:1px solid var(--b1);border-radius:var(--rl);padding:var(--sp-md)}
+.an-ttl{font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;font-family:var(--fd)}
+.m-card{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:12px}
+.m-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
+.m-val{font-family:var(--fd);font-weight:800;font-size:22px;letter-spacing:-.4px}
+.m-sub{font-size:10px;color:var(--muted);margin-top:3px}
 .chart-wrap{position:relative}
-.acc-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:11px}
-.acc-bar-bg{flex:1;height:6px;background:var(--surface2);border-radius:3px;border:1px solid var(--border);overflow:hidden}
-.acc-bar-fill{height:100%;border-radius:3px;transition:width .5s cubic-bezier(.4,0,.2,1)}
-/* Confusion */
-.cf-wrap{overflow:auto}
-.cf-grid{display:grid;gap:2px}
-.cf-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:4px;font-size:11px;font-weight:600;font-family:var(--font-display)}
+.a-acc-row{display:flex;align-items:center;gap:9px;margin-bottom:7px;font-size:11px}
+.a-acc-bg{flex:1;height:6px;background:var(--s2);border-radius:3px;border:1px solid var(--b1);overflow:hidden}
+.a-acc-fill{height:100%;border-radius:3px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.cf-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:4px;font-size:11px;font-weight:700;font-family:var(--fd)}
+.pipe-wrap{display:flex;align-items:flex-start;overflow-x:auto;padding:4px 0 6px}
+.pipe-step{display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;min-width:80px}
+.pipe-box{width:100%;padding:9px 6px;border-radius:7px;border:1px solid;font-size:10px;text-align:center;font-family:var(--fd);font-weight:700}
+.pipe-ico{font-size:14px;margin-bottom:2px}
+.pipe-desc{font-size:9px;color:var(--muted);text-align:center;max-width:84px}
+.pipe-arr{color:var(--dim);font-size:15px;padding:0 2px;flex-shrink:0;margin-top:12px;align-self:flex-start}
+.sim-btn{flex:1;min-width:70px;padding:7px 5px;font-size:11px;border-radius:7px;border:1px solid var(--b1);background:transparent;cursor:pointer;color:var(--text);transition:background .12s,border-color .12s}
+.sim-btn:hover,.sim-btn.active{background:var(--s2);border-color:var(--b2)}
+.sim-k-item{display:flex;justify-content:space-between;align-items:center;padding:5px 8px;border-radius:6px;background:var(--s2);font-size:11px;margin-bottom:3px}
+.sim-vbar-row{display:flex;align-items:center;gap:7px;margin-bottom:5px;font-size:11px}
+.sim-vbg{flex:1;height:5px;background:var(--s2);border-radius:3px;overflow:hidden}
+.sim-vfill{height:100%;border-radius:3px;transition:width .3s}
+.verdict{padding:8px 12px;border-radius:8px;background:var(--s2);border:1px solid var(--b1);font-size:12px;margin-top:8px}
+.noise-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:11px;color:var(--muted)}
+.an-legend{display:flex;gap:14px;font-size:10px;color:var(--muted);margin-top:7px;flex-wrap:wrap}
+.an-legend span{display:flex;align-items:center;gap:4px}
+.swatch{width:10px;height:10px;border-radius:2px;display:inline-block;flex-shrink:0}
 
-/* Pipeline */
-.pipe-wrap{display:flex;align-items:flex-start;gap:0;overflow-x:auto;padding:4px 0 8px}
-.pipe-step{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;min-width:90px}
-.pipe-box{width:100%;padding:10px 8px;border-radius:8px;border:1px solid;font-size:10px;text-align:center;font-family:var(--font-display);font-weight:700;letter-spacing:.02em}
-.pipe-icon{font-size:16px;margin-bottom:3px}
-.pipe-desc{font-size:9px;color:var(--muted);text-align:center;letter-spacing:.02em;max-width:90px}
-.pipe-arrow{color:var(--muted2);font-size:18px;padding:0 3px;flex-shrink:0;margin-top:14px;align-self:flex-start}
+/* ── Mobile backdrop ── */
+#sb-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:199;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
 
-/* Live sim */
-.sim-btn{flex:1;min-width:80px;padding:7px 6px;font-size:11px;border-radius:8px;border:1px solid var(--border);background:transparent;cursor:pointer;color:var(--text);font-family:var(--font-mono);transition:background .12s,border-color .12s}
-.sim-btn:hover,.sim-btn.active{background:var(--surface2);border-color:var(--border2)}
-.sim-knn{display:flex;flex-direction:column;gap:4px}
-.sim-knn-item{display:flex;justify-content:space-between;align-items:center;padding:5px 8px;border-radius:6px;background:var(--surface2);font-size:11px}
-.sim-vbar-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:11px}
-.sim-vbar-bg{flex:1;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden}
-.sim-vbar-fill{height:100%;border-radius:3px;transition:width .3s}
-.verdict{padding:8px 12px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);font-size:12px;margin-top:8px}
+/* ╔══════════════════════════════════════════════════════════════╗
+   ║  RESPONSIVE BREAKPOINTS                                      ║
+   ╚══════════════════════════════════════════════════════════════╝ */
 
-/* Noise slider */
-.noise-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:11px;color:var(--muted)}
+/* ── Large desktop ≥1280px ── */
+@media(min-width:1280px){
+  :root{--sb-w:290px}
+  #view-analytics{padding:var(--sp-xl)}
+  .sb-logo{font-size:20px}
+  #hint-bar{font-size:12px}
+}
+
+/* ── Tablet landscape ≤1024px ── */
+@media(max-width:1024px){
+  :root{--sb-w:248px}
+  .an-g4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .m-val{font-size:20px}
+  #view-analytics{padding:var(--sp-md);gap:12px}
+}
+
+/* ── Tablet portrait ≤768px: sidebar becomes drawer ── */
+@media(max-width:768px){
+  :root{--sb-w:min(280px,88vw);--tab-h:48px}
+  #sidebar{
+    position:fixed;left:0;top:0;height:100dvh;
+    transform:translateX(calc(-1 * var(--sb-w)));
+    box-shadow:6px 0 40px rgba(0,0,0,.7);
+  }
+  #sidebar.open{transform:translateX(0)}
+  #sb-backdrop.show{display:block}
+  #sb-close{display:block}
+  #menu-btn{display:flex;align-items:center}
+  .an-g2{grid-template-columns:1fr}
+  .an-g4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #view-analytics{padding:var(--sp-sm);gap:var(--sp-sm)}
+  .an-card{padding:var(--sp-sm)}
+  #acc-overlay{right:8px;bottom:8px;min-width:200px}
+  .ov-conf{font-size:22px}
+}
+
+/* ── Mobile portrait ≤480px ── */
+@media(max-width:480px){
+  :root{--sb-w:92vw;--tab-h:44px}
+  #hint-bar{font-size:10px;gap:6px}
+  .tab{font-size:10px;padding:0 10px;letter-spacing:.04em}
+  .an-g4{grid-template-columns:1fr 1fr}
+  .m-val{font-size:17px}
+  .m-lbl{font-size:9px}
+  #view-analytics{gap:8px;padding:8px}
+  .an-card{padding:10px}
+  .an-ttl{font-size:8px}
+  #acc-overlay{right:6px;bottom:6px;min-width:0;width:calc(100% - 12px);padding:10px 12px 9px}
+  .ov-winner{font-size:14px}
+  .ov-cls{width:62px}
+  .ov-ring{width:40px;height:40px}
+  .ov-ring-val{font-size:9px}
+  .ov-stats{gap:9px}
+}
+
+/* ── Tiny ≤360px ── */
+@media(max-width:360px){
+  .tab{padding:0 7px;font-size:9px}
+  .an-g4{grid-template-columns:1fr}
+  #acc-overlay{font-size:10px}
+  .ov-winner{font-size:13px}
+}
+
+/* ── Short landscape phone ── */
+@media(max-height:500px){
+  :root{--tab-h:38px}
+  #view-canvas{padding:6px;gap:4px}
+  #hint-bar{display:none}
+  #acc-overlay{
+    bottom:6px;right:6px;
+    padding:8px 10px;
+    max-height:calc(100dvh - 60px);
+    overflow-y:auto;
+  }
+  .ov-bars{gap:3px}
+}
+
+/* ── Touch devices ── */
+@media(hover:none){
+  input[type=range]::-webkit-slider-thumb{width:20px;height:20px;margin-top:-8px}
+  .sim-btn,.btn-clear{min-height:40px}
+}
+
+/* ── Retina fine lines ── */
+@media(-webkit-min-device-pixel-ratio:2),(min-resolution:192dpi){
+  #stage-wrap{box-shadow:0 0 0 .5px rgba(167,139,250,.12),0 0 50px rgba(100,60,200,.1),0 16px 60px rgba(0,0,0,.75)}
+}
 </style>
 </head>
 <body>
 <div id="app">
 
-<!-- ══════════════════ SIDEBAR ══════════════════ -->
+<!-- ══════════════════════════ SIDEBAR ══════════════════════════ -->
 <aside id="sidebar">
-  <div class="sb-header">
-    <div class="sb-logo">Gesture<span>KNN</span></div>
-    <div class="sb-sub">Draw · Classify · Analyze</div>
+  <div class="sb-hd">
+    <div>
+      <div class="sb-logo">Gesture<span>KNN</span></div>
+      <div class="sb-sub">Draw · Classify · Analyze</div>
+    </div>
+    <button id="sb-close" aria-label="Close">✕</button>
   </div>
+  <div id="sb-body">
 
-  <div class="sb-body">
-    <!-- Gesture reference -->
-    <div class="sb-section">
-      <div class="sb-label">Gesture Library</div>
-      <div class="g-card" data-cls="Fire">
-        <canvas id="prev-Fire" width="40" height="40"></canvas>
-        <div><div class="name" style="color:var(--fire)">🔥 Fire</div><div class="hint">Wavy upward stroke</div></div>
-      </div>
-      <div class="g-card" data-cls="Lightning">
-        <canvas id="prev-Lightning" width="40" height="40"></canvas>
-        <div><div class="name" style="color:var(--lightning)">⚡ Lightning</div><div class="hint">Sharp zigzag bolt</div></div>
-      </div>
-      <div class="g-card" data-cls="Water">
-        <canvas id="prev-Water" width="40" height="40"></canvas>
-        <div><div class="name" style="color:var(--water)">💧 Water</div><div class="hint">Horizontal wave</div></div>
-      </div>
-      <div class="g-card" data-cls="Wind">
-        <canvas id="prev-Wind" width="40" height="40"></canvas>
-        <div><div class="name" style="color:var(--wind)">💨 Wind</div><div class="hint">Smooth arc sweep</div></div>
-      </div>
-      <div class="g-card" data-cls="Portal">
-        <canvas id="prev-Portal" width="40" height="40"></canvas>
-        <div><div class="name" style="color:var(--portal)">🔮 Portal</div><div class="hint">Closed circle loop</div></div>
-      </div>
+    <div class="sb-sec">
+      <div class="sb-lbl">Gesture Library</div>
+      <div class="g-card"><canvas id="prev-Fire" width="40" height="40"></canvas><div><div class="nm" style="color:var(--fire)">🔥 Fire</div><div class="ht">Wavy upward stroke</div></div></div>
+      <div class="g-card"><canvas id="prev-Lightning" width="40" height="40"></canvas><div><div class="nm" style="color:var(--lightning)">⚡ Lightning</div><div class="ht">Sharp zigzag bolt</div></div></div>
+      <div class="g-card"><canvas id="prev-Water" width="40" height="40"></canvas><div><div class="nm" style="color:var(--water)">💧 Water</div><div class="ht">Horizontal wave</div></div></div>
+      <div class="g-card"><canvas id="prev-Wind" width="40" height="40"></canvas><div><div class="nm" style="color:var(--wind)">💨 Wind</div><div class="ht">Smooth arc sweep</div></div></div>
+      <div class="g-card"><canvas id="prev-Portal" width="40" height="40"></canvas><div><div class="nm" style="color:var(--portal)">🔮 Portal</div><div class="ht">Closed circle loop</div></div></div>
     </div>
 
-    <!-- K slider -->
-    <div class="sb-section">
-      <div class="sb-label">K Neighbors</div>
-      <div class="k-row">
-        <span style="font-size:11px;color:var(--muted)">Voting size</span>
-        <span class="k-val" id="k-display">3</span>
-      </div>
+    <div class="sb-sec">
+      <div class="sb-lbl">K Neighbors</div>
+      <div class="k-row"><span style="font-size:11px;color:var(--muted)">Voting size</span><span class="k-val" id="k-display">3</span></div>
       <input type="range" id="k-slider" min="1" max="9" value="3" step="1"/>
       <div class="k-hints"><span>strict — 1</span><span>9 — flexible</span></div>
     </div>
 
-    <!-- Result card -->
-    <div class="sb-section">
-      <div class="sb-label">Classification</div>
-      <div class="result-card" id="result-card">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
-          <span class="result-emoji" id="r-emoji">✏️</span>
+    <div class="sb-sec">
+      <div class="sb-lbl">Classification</div>
+      <div class="r-card" id="result-card">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:9px">
+          <span style="font-size:28px;line-height:1;flex-shrink:0" id="r-emoji">✏️</span>
           <div>
             <div style="font-size:10px;color:var(--muted);margin-bottom:2px">Classified as</div>
-            <div class="result-name" id="r-name">Draw a gesture</div>
+            <div class="r-name" id="r-name">Draw a gesture</div>
           </div>
         </div>
-        <div class="result-meta" id="r-meta">Draw on the canvas to begin</div>
+        <div class="r-meta" id="r-meta">Draw on the canvas to begin</div>
       </div>
-      <div id="vote-bars" style="margin-top:10px"></div>
+      <div id="vote-bars" style="margin-top:9px"></div>
     </div>
 
-    <!-- Neighbors -->
-    <div class="sb-section">
-      <div class="sb-label">K Nearest Templates</div>
-      <div id="neighbors-list" style="font-size:11px;color:var(--muted);font-style:italic">—</div>
+    <div class="sb-sec">
+      <div class="sb-lbl">K Nearest Templates</div>
+      <div id="nb-list" style="font-size:11px;color:var(--muted);font-style:italic">—</div>
     </div>
+
   </div>
-
-  <div class="sb-footer">
+  <div class="sb-ft">
     <button class="btn-clear" id="btn-clear">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
       Clear Drawing
     </button>
   </div>
 </aside>
+<div id="sb-backdrop"></div>
 
-<!-- ══════════════════ MAIN ══════════════════ -->
+<!-- ══════════════════════════ MAIN ══════════════════════════ -->
 <div id="main">
-  <div id="tabs">
+  <div id="topbar">
+    <button id="menu-btn" aria-label="Open sidebar">☰</button>
     <div class="tab on" data-tab="canvas">Canvas</div>
     <div class="tab" data-tab="analytics">Analytics</div>
   </div>
 
-  <!-- Canvas view -->
+  <!-- CANVAS VIEW -->
   <div id="view-canvas">
     <div id="hint-bar">
       <span style="color:var(--accent)">✦</span>
-      Draw any gesture — KNN classifies in real time
+      Draw any gesture — KNN classifies instantly
       <span id="k-badge">K = 3</span>
     </div>
-    <div id="stage-wrap">
-      <div id="stage-container"></div>
+    <div id="canvas-area">
+      <div id="stage-wrap"><div id="stage-container"></div></div>
+
+      <!-- ════════════ LIVE ACCURACY OVERLAY ════════════ -->
+      <div id="acc-overlay">
+        <div class="ov-head">
+          <div>
+            <div class="ov-tag">Classified as</div>
+            <div class="ov-winner" id="ov-winner">—</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center">
+            <div class="ov-ring">
+              <svg width="46" height="46" viewBox="0 0 46 46">
+                <circle cx="23" cy="23" r="19" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="3.5"/>
+                <circle id="ov-arc" cx="23" cy="23" r="19" fill="none" stroke="#a78bfa" stroke-width="3.5"
+                  stroke-dasharray="0 120" stroke-linecap="round"/>
+              </svg>
+              <div class="ov-ring-val" id="ov-ring-val">—</div>
+            </div>
+            <div class="ov-conf-tag">Confidence</div>
+          </div>
+        </div>
+        <div class="ov-bars" id="ov-bars"></div>
+        <div class="ov-stats">
+          <div class="ov-stat">Distance: <b id="ov-dist">—</b></div>
+          <div class="ov-stat">Points: <b id="ov-pts">—</b></div>
+          <div class="ov-stat">Vote: <b id="ov-vote">—</b></div>
+          <div class="ov-stat">K: <b id="ov-k">—</b></div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Analytics view -->
+  <!-- ANALYTICS VIEW -->
   <div id="view-analytics">
-
-    <!-- Metric cards -->
-    <div class="an-grid-4">
-      <div class="metric-card">
-        <div style="font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Overall accuracy</div>
-        <div class="metric-val" id="m-acc">—</div>
-        <div class="metric-sub">across all 5 classes</div>
+    <div class="an-g4">
+      <div class="m-card"><div class="m-lbl">Overall accuracy</div><div class="m-val" id="m-acc">—</div><div class="m-sub">across 5 classes</div></div>
+      <div class="m-card"><div class="m-lbl">Avg dist (correct)</div><div class="m-val" id="m-dist">—</div><div class="m-sub">lower = confident</div></div>
+      <div class="m-card"><div class="m-lbl">Best class</div><div class="m-val" id="m-best">—</div><div class="m-sub" id="m-best-acc"></div></div>
+      <div class="m-card"><div class="m-lbl">Hardest class</div><div class="m-val" id="m-worst">—</div><div class="m-sub" id="m-worst-acc"></div></div>
+    </div>
+    <div class="an-g2">
+      <div class="an-card">
+        <div class="an-ttl">Per-class accuracy (K=3, 40 tests each)</div>
+        <div id="acc-bars-an"></div>
       </div>
-      <div class="metric-card">
-        <div style="font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Avg dist (correct)</div>
-        <div class="metric-val" id="m-dist">—</div>
-        <div class="metric-sub">lower = more confident</div>
-      </div>
-      <div class="metric-card">
-        <div style="font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Best class</div>
-        <div class="metric-val" id="m-best">—</div>
-        <div class="metric-sub" id="m-best-acc"></div>
-      </div>
-      <div class="metric-card">
-        <div style="font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Hardest class</div>
-        <div class="metric-val" id="m-worst">—</div>
-        <div class="metric-sub" id="m-worst-acc"></div>
+      <div class="an-card">
+        <div class="an-ttl">K vs overall accuracy</div>
+        <div class="chart-wrap" style="height:185px"><canvas id="k-chart"></canvas></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:7px">Red dot = current K</div>
       </div>
     </div>
-
-    <!-- Per-class accuracy + K chart -->
-    <div class="an-grid-2">
+    <div class="an-g2">
       <div class="an-card">
-        <div class="an-card-title">Per-class accuracy (K=3, 40 test gestures each)</div>
-        <div id="acc-bars"></div>
-      </div>
-      <div class="an-card">
-        <div class="an-card-title">K vs overall accuracy</div>
-        <div class="chart-wrap" style="height:190px"><canvas id="k-chart"></canvas></div>
-        <div style="font-size:10px;color:var(--muted);margin-top:8px">Red dot = current K</div>
-      </div>
-    </div>
-
-    <!-- Confusion + distance dist -->
-    <div class="an-grid-2">
-      <div class="an-card">
-        <div class="an-card-title">Confusion matrix — % predicted as →</div>
-        <div style="font-size:9px;color:var(--muted);margin-bottom:8px;display:flex;gap:12px">
-          <span>Rows = actual class</span><span>Cols = predicted class</span>
-        </div>
+        <div class="an-ttl">Confusion matrix — % predicted as →</div>
+        <div style="font-size:9px;color:var(--muted);margin-bottom:8px">Rows = actual · Cols = predicted</div>
         <div id="cf-wrap"></div>
       </div>
       <div class="an-card">
-        <div class="an-card-title">Distance distribution (correct vs wrong)</div>
-        <div class="chart-wrap" style="height:200px"><canvas id="dist-chart"></canvas></div>
+        <div class="an-ttl">Distance distribution — correct vs wrong</div>
+        <div class="chart-wrap" style="height:185px"><canvas id="dist-chart"></canvas></div>
+        <div class="an-legend" id="dist-legend"></div>
       </div>
     </div>
-
-    <!-- Backend pipeline -->
     <div class="an-card">
-      <div class="an-card-title">Backend pipeline — how each gesture is processed</div>
+      <div class="an-ttl">Backend pipeline</div>
       <div class="pipe-wrap" id="pipeline"></div>
     </div>
-
-    <!-- Live simulator -->
     <div class="an-card">
-      <div class="an-card-title">Live KNN simulator</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="sim-btns"></div>
-      <div class="noise-row">
-        <span>Noise level:</span>
-        <input type="range" id="noise-slider" min="1" max="10" value="4" step="1" style="width:120px"/>
-        <span id="noise-val">4</span>
-        <span style="font-size:10px">(higher = harder)</span>
-      </div>
+      <div class="an-ttl">Live KNN simulator</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px" id="sim-btns"></div>
+      <div class="noise-row">Noise: <input type="range" id="noise-slider" min="1" max="10" value="4" step="1" style="width:100px"/> <span id="noise-val">4</span> <span style="font-size:9px">(higher = harder)</span></div>
       <div id="sim-output" style="display:none">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px">
-          <div>
-            <div style="font-size:10px;color:var(--muted);margin-bottom:6px">K nearest neighbors</div>
-            <div class="sim-knn" id="sim-knn-list"></div>
-          </div>
-          <div>
-            <div style="font-size:10px;color:var(--muted);margin-bottom:6px">Vote distribution</div>
-            <div id="sim-votes"></div>
-          </div>
+          <div><div style="font-size:10px;color:var(--muted);margin-bottom:6px">K nearest neighbors</div><div id="sim-knn-list"></div></div>
+          <div><div style="font-size:10px;color:var(--muted);margin-bottom:6px">Vote distribution</div><div id="sim-votes"></div></div>
         </div>
         <div class="verdict" id="sim-verdict"></div>
       </div>
     </div>
-
-  </div>
-</div>
-</div>
+  </div><!-- /view-analytics -->
+</div><!-- /main -->
+</div><!-- /app -->
 
 <script>
 'use strict';
-
 /* ═══════════════════════════════════════════════
    CONSTANTS
 ═══════════════════════════════════════════════ */
-const CLASSES = ['Fire','Lightning','Water','Wind','Portal'];
-const EMOJI   = {Fire:'🔥',Lightning:'⚡',Water:'💧',Wind:'💨',Portal:'🔮'};
-const COLORS  = {Fire:'#f97316',Lightning:'#facc15',Water:'#38bdf8',Wind:'#94a3b8',Portal:'#a78bfa'};
-const GLOW    = {Fire:'rgba(249,115,22,.15)',Lightning:'rgba(250,204,21,.15)',Water:'rgba(56,189,248,.15)',Wind:'rgba(148,163,184,.15)',Portal:'rgba(167,139,250,.15)'};
-const BORDER  = {Fire:'rgba(249,115,22,.45)',Lightning:'rgba(250,204,21,.45)',Water:'rgba(56,189,248,.45)',Wind:'rgba(148,163,184,.45)',Portal:'rgba(167,139,250,.45)'};
+const CLASSES=['Fire','Lightning','Water','Wind','Portal'];
+const EMOJI  ={Fire:'🔥',Lightning:'⚡',Water:'💧',Wind:'💨',Portal:'🔮'};
+const COLORS ={Fire:'#f97316',Lightning:'#facc15',Water:'#38bdf8',Wind:'#94a3b8',Portal:'#a78bfa'};
+const GLOW   ={Fire:'rgba(249,115,22,.14)',Lightning:'rgba(250,204,21,.14)',Water:'rgba(56,189,248,.14)',Wind:'rgba(148,163,184,.14)',Portal:'rgba(167,139,250,.14)'};
+const BORD   ={Fire:'rgba(249,115,22,.4)',Lightning:'rgba(250,204,21,.4)',Water:'rgba(56,189,248,.4)',Wind:'rgba(148,163,184,.4)',Portal:'rgba(167,139,250,.4)'};
+const CIRC   =2*Math.PI*19; // circumference for ring r=19
 
 /* ═══════════════════════════════════════════════
    GESTURE GENERATORS
 ═══════════════════════════════════════════════ */
-function genFire(v){const pts=[];const amp=16+v*1.8,freq=2.5+(v%3)*.55,xOff=(v-3.5)*4;for(let i=0;i<=60;i++){const t=i/60;pts.push([50+xOff+Math.sin(t*Math.PI*freq)*amp,90-t*80]);}return pts;}
-function genLightning(v){const off=(v-3.5)*3,s=.86+v*.04,key=[[50,5],[74,28],[42,44],[76,60],[44,76],[72,95]];const pts=[];for(let i=0;i<key.length-1;i++){const[x0,y0]=key[i],[x1,y1]=key[i+1];for(let j=0;j<=10;j++){const t=j/10;pts.push([(x0+t*(x1-x0))*s+off,(y0+t*(y1-y0))*s+(1-s)*50]);}}return pts;}
-function genWater(v){const pts=[],amp=12+(v%4)*5,freq=2+Math.floor(v/4),yBase=50+(v-3.5)*4;for(let i=0;i<=60;i++){const t=i/60;pts.push([5+t*90,yBase+Math.sin(t*Math.PI*freq*2)*amp]);}return pts;}
-function genWind(v){const pts=[],arch=10+(v%4)*4,yBase=50+(v-3.5)*8;for(let i=0;i<=60;i++){const t=i/60;pts.push([5+t*90,yBase-Math.sin(t*Math.PI)*arch]);}return pts;}
-function genPortal(v){const pts=[],cx=50+(v-3.5)*2,cy=50+(v-3.5)*2,r=26+(v%4)*6;for(let i=0;i<=72;i++){const θ=(i/72)*Math.PI*2;pts.push([cx+Math.cos(θ)*r,cy+Math.sin(θ)*r]);}return pts;}
+function genFire(v){const a=16+v*1.8,f=2.5+(v%3)*.55,o=(v-3.5)*4,p=[];for(let i=0;i<=60;i++){const t=i/60;p.push([50+o+Math.sin(t*Math.PI*f)*a,90-t*80]);}return p;}
+function genLightning(v){const o=(v-3.5)*3,s=.86+v*.04,k=[[50,5],[74,28],[42,44],[76,60],[44,76],[72,95]],p=[];for(let i=0;i<k.length-1;i++){const[x0,y0]=k[i],[x1,y1]=k[i+1];for(let j=0;j<=10;j++){const t=j/10;p.push([(x0+t*(x1-x0))*s+o,(y0+t*(y1-y0))*s+(1-s)*50]);}}return p;}
+function genWater(v){const a=12+(v%4)*5,f=2+Math.floor(v/4),yb=50+(v-3.5)*4,p=[];for(let i=0;i<=60;i++){const t=i/60;p.push([5+t*90,yb+Math.sin(t*Math.PI*f*2)*a]);}return p;}
+function genWind(v){const a=10+(v%4)*4,yb=50+(v-3.5)*8,p=[];for(let i=0;i<=60;i++){const t=i/60;p.push([5+t*90,yb-Math.sin(t*Math.PI)*a]);}return p;}
+function genPortal(v){const cx=50+(v-3.5)*2,cy=50+(v-3.5)*2,r=26+(v%4)*6,p=[];for(let i=0;i<=72;i++){const θ=(i/72)*Math.PI*2;p.push([cx+Math.cos(θ)*r,cy+Math.sin(θ)*r]);}return p;}
 const GEN={Fire:genFire,Lightning:genLightning,Water:genWater,Wind:genWind,Portal:genPortal};
 
 /* ═══════════════════════════════════════════════
-   PREPROCESSING
+   PRE-PROCESSING
 ═══════════════════════════════════════════════ */
 function normalize(pts){
   if(!pts.length)return pts;
@@ -360,7 +477,7 @@ function resample(pts,n=32){
 }
 
 /* ═══════════════════════════════════════════════
-   TRAINING DATA (8 variations × 5 classes = 40)
+   TRAINING DATA  (8 × 5 = 40 templates)
 ═══════════════════════════════════════════════ */
 const training=[];
 for(const[lbl,gen]of Object.entries(GEN))
@@ -372,124 +489,240 @@ for(const[lbl,gen]of Object.entries(GEN))
 ═══════════════════════════════════════════════ */
 function euclidean(a,b){let s=0;for(let i=0;i<a.length;i++){const dx=b[i][0]-a[i][0],dy=b[i][1]-a[i][1];s+=dx*dx+dy*dy;}return Math.sqrt(s);}
 function knn(qPts,k){
-  const r=training.map(s=>({sample:s,dist:euclidean(qPts,s.points)}));
-  r.sort((a,b)=>a.dist-b.dist);
-  const nn=r.slice(0,k),tally={};
-  for(const{sample}of nn)tally[sample.label]=(tally[sample.label]||0)+1;
+  const ranked=training.map(s=>({sample:s,dist:euclidean(qPts,s.points)}));
+  ranked.sort((a,b)=>a.dist-b.dist);
+  const nearest=ranked.slice(0,k),tally={};
+  for(const{sample}of nearest)tally[sample.label]=(tally[sample.label]||0)+1;
   let win=null,mx=0;
   for(const[l,c]of Object.entries(tally))if(c>mx){mx=c;win=l;}
-  return{winner:win,tally,nearest:nn};
+  return{winner:win,tally,nearest,allRanked:ranked};
 }
 
 /* ═══════════════════════════════════════════════
-   KONVA CANVAS
+   CANVAS — sized via ResizeObserver
 ═══════════════════════════════════════════════ */
-let K=3;
-let currentPoints=[],isDrawing=false;
+let K=3,stage=null,bgL=null,drawL=null,uiL=null;
+let currentPts=[],isDrawing=false;
+let cW=0,cH=0;
 
-const panelW=document.getElementById('sidebar').offsetWidth;
-const W=Math.min(Math.max(window.innerWidth-panelW-48,320),1040);
-const H=Math.min(Math.max(window.innerHeight-96,280),660);
+function measureCanvas(){
+  /* The available area for the canvas is the #view-canvas container
+     minus the hint bar height and padding.  We read real computed
+     dimensions so every breakpoint is handled automatically.        */
+  const vc  = document.getElementById('view-canvas');
+  const hb  = document.getElementById('hint-bar');
+  const vcR = vc.getBoundingClientRect();
+  const hbH = hb.getBoundingClientRect().height;
+  const padV= 14*2; // --sp-md top+bottom padding on view-canvas
+  const gapV= 10;   // gap between hint-bar and canvas-area
+  const availW = vcR.width  - 28; // 14px each side
+  const availH = vcR.height - hbH - padV - gapV - 8;
+  cW = Math.max(200, Math.min(availW, 1100));
+  cH = Math.max(150, Math.min(availH,  680));
+  return{w:cW,h:cH};
+}
 
-const stage=new Konva.Stage({container:'stage-container',width:W,height:H});
-const bgLayer=new Konva.Layer(),drawLayer=new Konva.Layer(),uiLayer=new Konva.Layer();
-stage.add(bgLayer,drawLayer,uiLayer);
+function initStage(){
+  const{w,h}=measureCanvas();
+  if(stage){
+    if(stage.width()===w&&stage.height()===h)return; // no-op if unchanged
+    stage.width(w);stage.height(h);
+    bgL.destroyChildren();drawBG();bgL.draw();
+    drawL.destroyChildren();drawL.draw();
+    uiL.destroyChildren();showHint();
+    return;
+  }
+  stage=new Konva.Stage({container:'stage-container',width:w,height:h});
+  bgL=new Konva.Layer();drawL=new Konva.Layer();uiL=new Konva.Layer();
+  stage.add(bgL,drawL,uiL);
+  drawBG();showHint();
 
-// Grid background
-bgLayer.add(new Konva.Rect({x:0,y:0,width:W,height:H,fill:'#070d1a'}));
-const GS='rgba(20,30,50,.9)';
-for(let x=50;x<W;x+=50)bgLayer.add(new Konva.Line({points:[x,0,x,H],stroke:GS,strokeWidth:1}));
-for(let y=50;y<H;y+=50)bgLayer.add(new Konva.Line({points:[0,y,W,y],stroke:GS,strokeWidth:1}));
-bgLayer.draw();
+  stage.on('mousedown touchstart',()=>{
+    isDrawing=true;currentPts=[];
+    drawL.destroyChildren();drawL.draw();
+    uiL.destroyChildren();uiL.draw();
+    hideOverlay();
+    const p=stage.getPointerPosition();if(p)currentPts.push([p.x,p.y]);
+  });
+  stage.on('mousemove touchmove',e=>{
+    if(!isDrawing)return;e.evt.preventDefault?.();
+    const p=stage.getPointerPosition();if(!p)return;
+    currentPts.push([p.x,p.y]);
+    renderStroke('#e2e8f0',2.8,8,.3);
+  });
+  stage.on('mouseup touchend',()=>{if(!isDrawing)return;isDrawing=false;processDrawing();});
+  stage.on('mouseleave',()=>{if(isDrawing){isDrawing=false;if(currentPts.length>=8)processDrawing();}});
+}
 
+function drawBG(){
+  bgL.add(new Konva.Rect({x:0,y:0,width:cW,height:cH,fill:'#070d1a'}));
+  const S='rgba(20,30,50,.85)';
+  for(let x=50;x<cW;x+=50)bgL.add(new Konva.Line({points:[x,0,x,cH],stroke:S,strokeWidth:1}));
+  for(let y=50;y<cH;y+=50)bgL.add(new Konva.Line({points:[0,y,cW,y],stroke:S,strokeWidth:1}));
+  bgL.draw();
+}
 function showHint(){
-  uiLayer.destroyChildren();
-  uiLayer.add(new Konva.Text({x:W/2-200,y:H/2-20,width:400,align:'center',text:'Draw a gesture here',fontSize:20,fontFamily:'Syne,sans-serif',fill:'rgba(90,96,128,.5)'}));
-  uiLayer.add(new Konva.Text({x:W/2-200,y:H/2+18,width:400,align:'center',text:'Try a wavy stroke (🔥), zigzag (⚡), or loop (🔮)',fontSize:11,fontFamily:'DM Mono,monospace',fill:'rgba(90,96,128,.3)'}));
-  uiLayer.draw();
+  uiL.destroyChildren();
+  const fs=Math.min(22,cW/18);
+  uiL.add(new Konva.Text({x:cW/2-210,y:cH/2-20,width:420,align:'center',text:'Draw a gesture here',fontSize:fs,fontFamily:'Syne,sans-serif',fill:'rgba(90,96,128,.44)'}));
+  uiL.add(new Konva.Text({x:cW/2-210,y:cH/2+fs,width:420,align:'center',text:'Try a wavy stroke 🔥, zigzag ⚡, or loop 🔮',fontSize:Math.min(12,cW/40),fontFamily:'DM Mono,monospace',fill:'rgba(90,96,128,.27)'}));
+  uiL.draw();
 }
-showHint();
-
-function renderStroke(color,width,blur,glowOp){
-  drawLayer.destroyChildren();
-  if(currentPoints.length<2){drawLayer.draw();return;}
-  const flat=currentPoints.flat();
-  drawLayer.add(new Konva.Line({points:flat,lineCap:'round',lineJoin:'round',tension:.2,stroke:color,strokeWidth:width+6,opacity:.12}));
-  drawLayer.add(new Konva.Line({points:flat,lineCap:'round',lineJoin:'round',tension:.2,stroke:color,strokeWidth:width,shadowColor:color,shadowBlur:blur,shadowOpacity:glowOp}));
-  drawLayer.add(new Konva.Circle({x:currentPoints[0][0],y:currentPoints[0][1],radius:5,fill:'#22c55e',shadowColor:'#22c55e',shadowBlur:10,shadowOpacity:.8}));
-  const last=currentPoints[currentPoints.length-1];
-  drawLayer.add(new Konva.Circle({x:last[0],y:last[1],radius:4,fill:color,shadowColor:color,shadowBlur:8,shadowOpacity:.65}));
-  drawLayer.draw();
+function renderStroke(color,w,blur,gop){
+  drawL.destroyChildren();
+  if(currentPts.length<2){drawL.draw();return;}
+  const flat=currentPts.flat();
+  drawL.add(new Konva.Line({points:flat,lineCap:'round',lineJoin:'round',tension:.2,stroke:color,strokeWidth:w+6,opacity:.1}));
+  drawL.add(new Konva.Line({points:flat,lineCap:'round',lineJoin:'round',tension:.2,stroke:color,strokeWidth:w,shadowColor:color,shadowBlur:blur,shadowOpacity:gop}));
+  drawL.add(new Konva.Circle({x:currentPts[0][0],y:currentPts[0][1],radius:5,fill:'#22c55e',shadowColor:'#22c55e',shadowBlur:10,shadowOpacity:.8}));
+  const last=currentPts[currentPts.length-1];
+  drawL.add(new Konva.Circle({x:last[0],y:last[1],radius:4,fill:color,shadowColor:color,shadowBlur:8,shadowOpacity:.6}));
+  drawL.draw();
 }
 
-stage.on('mousedown touchstart',()=>{
-  isDrawing=true;currentPoints=[];
-  drawLayer.destroyChildren();drawLayer.draw();
-  uiLayer.destroyChildren();uiLayer.draw();
-  const p=stage.getPointerPosition();if(p)currentPoints.push([p.x,p.y]);
-});
-stage.on('mousemove touchmove',e=>{
-  if(!isDrawing)return;e.evt.preventDefault?.();
-  const p=stage.getPointerPosition();if(!p)return;
-  currentPoints.push([p.x,p.y]);
-  renderStroke('#e2e8f0',2.8,8,.32);
-});
-stage.on('mouseup touchend',()=>{if(!isDrawing)return;isDrawing=false;processDrawing();});
-stage.on('mouseleave',()=>{if(isDrawing){isDrawing=false;if(currentPoints.length>=8)processDrawing();}});
-
+/* ═══════════════════════════════════════════════
+   PROCESS DRAWING
+═══════════════════════════════════════════════ */
 function processDrawing(){
-  if(currentPoints.length<8){showHint();return;}
-  const normed=normalize(currentPoints);
+  if(currentPts.length<8){showHint();return;}
+  const normed  =normalize(currentPts);
   const resampled=resample(normed,32);
-  const res=knn(resampled,K);
-  const meta={color:COLORS[res.winner],glow:GLOW[res.winner],border:BORDER[res.winner]};
-  renderStroke(meta.color,3.5,18,.72);
-  // Overlay pill
-  const pillW=130,pillH=34,px=W-pillW-12,py=12;
-  uiLayer.destroyChildren();
-  uiLayer.add(new Konva.Rect({x:px,y:py,width:pillW,height:pillH,fill:'rgba(7,13,26,.9)',cornerRadius:10,stroke:meta.border,strokeWidth:1,shadowColor:meta.color,shadowBlur:16,shadowOpacity:.55}));
-  uiLayer.add(new Konva.Text({x:px,y:py,width:pillW,height:pillH,align:'center',verticalAlign:'middle',text:`${EMOJI[res.winner]} ${res.winner}`,fontSize:14,fontStyle:'bold',fontFamily:'Syne,sans-serif',fill:meta.color}));
-  uiLayer.draw();
+  const res     =knn(resampled,K);
+
+  renderStroke(COLORS[res.winner],3.5,18,.7);
+
+  // Stage pill (top-left corner)
+  uiL.destroyChildren();
+  const pW=130,pH=34,px=12,py=12;
+  uiL.add(new Konva.Rect({x:px,y:py,width:pW,height:pH,fill:'rgba(7,13,26,.92)',cornerRadius:10,stroke:BORD[res.winner],strokeWidth:1,shadowColor:COLORS[res.winner],shadowBlur:14,shadowOpacity:.5}));
+  uiL.add(new Konva.Text({x:px,y:py,width:pW,height:pH,align:'center',verticalAlign:'middle',text:`${EMOJI[res.winner]} ${res.winner}`,fontSize:14,fontStyle:'bold',fontFamily:'Syne,sans-serif',fill:COLORS[res.winner]}));
+  uiL.draw();
+
+  showAccuracyOverlay(res,resampled);
   updateSidebar(res);
 }
 
+/* ═══════════════════════════════════════════════
+   LIVE ACCURACY OVERLAY
+   Shown immediately after every stroke.
+
+   Confidence is computed two ways and blended:
+   1. Vote share  — fraction of K votes for winner
+   2. Distance gap — how much closer the nearest
+      template is vs the mean template distance
+═══════════════════════════════════════════════ */
+function showAccuracyOverlay(res,resampled){
+  const{winner,tally,nearest,allRanked}=res;
+  const total=nearest.length;
+
+  // ── Per-class soft probability (distance-weighted over ALL templates) ──
+  const scores={};for(const c of CLASSES)scores[c]=0;
+  for(const{sample,dist}of allRanked)scores[sample.label]+=1/(dist+0.001);
+  const sumS=Object.values(scores).reduce((a,b)=>a+b,0);
+  for(const c of CLASSES)scores[c]/=sumS;
+
+  // ── Blended confidence ──
+  const voteConf=(tally[winner]||0)/total;
+  const nearestDist=nearest[0].dist;
+  const allDists=allRanked.map(r=>r.dist);
+  const meanDist=allDists.reduce((a,b)=>a+b,0)/allDists.length;
+  const distConf=Math.max(0,Math.min(1,1-nearestDist/meanDist+0.5));
+  const confidence=Math.round((voteConf*0.6+distConf*0.4)*100);
+
+  const color=COLORS[winner];
+
+  // Winner label
+  const wEl=document.getElementById('ov-winner');
+  wEl.textContent=`${EMOJI[winner]} ${winner}`;
+  wEl.style.color=color;
+
+  // Confidence ring
+  const arc=(confidence/100)*CIRC;
+  const arcEl=document.getElementById('ov-arc');
+  arcEl.setAttribute('stroke',color);
+  arcEl.setAttribute('stroke-dasharray',`${arc} ${CIRC-arc}`);
+  const rvEl=document.getElementById('ov-ring-val');
+  rvEl.textContent=confidence+'%';
+  rvEl.style.color=color;
+
+  // Per-class probability bars (sorted by probability desc)
+  const sorted=CLASSES.slice().sort((a,b)=>scores[b]-scores[a]);
+  const barsEl=document.getElementById('ov-bars');
+  barsEl.innerHTML='';
+  for(const cls of sorted){
+    const pct=Math.round(scores[cls]*100);
+    const isW=(cls===winner);
+    const row=document.createElement('div');
+    row.className='ov-row';
+    row.innerHTML=`
+      <span class="ov-cls${isW?' w':''}" style="color:${isW?COLORS[cls]:'var(--muted)'}">${EMOJI[cls]} ${cls}</span>
+      <div class="ov-bg"><div class="ov-fill" style="width:0%;background:${COLORS[cls]}"></div></div>
+      <span class="ov-pct" style="color:${isW?COLORS[cls]:'var(--muted)'}">${pct}%</span>`;
+    barsEl.appendChild(row);
+    // Double-raf so CSS transition fires after paint
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      row.querySelector('.ov-fill').style.width=pct+'%';
+    }));
+  }
+
+  // Stats
+  document.getElementById('ov-dist').textContent=nearestDist.toFixed(1);
+  document.getElementById('ov-pts').textContent=currentPts.length;
+  document.getElementById('ov-k').textContent=K;
+  document.getElementById('ov-vote').textContent=`${tally[winner]||0}/${total}`;
+
+  // Overlay styling
+  const ov=document.getElementById('acc-overlay');
+  ov.style.borderColor=BORD[winner];
+  ov.style.boxShadow=`0 0 22px ${GLOW[winner]}`;
+  ov.classList.add('visible');
+}
+
+function hideOverlay(){
+  const ov=document.getElementById('acc-overlay');
+  ov.classList.remove('visible');
+  ov.style.borderColor='';ov.style.boxShadow='';
+}
+
+/* ═══════════════════════════════════════════════
+   SIDEBAR UPDATE
+═══════════════════════════════════════════════ */
 function updateSidebar(res){
   const{winner,tally,nearest}=res;
   const card=document.getElementById('result-card');
-  card.style.background=GLOW[winner];
-  card.style.borderColor=BORDER[winner];
-  card.style.boxShadow=`0 0 28px ${GLOW[winner]}`;
+  card.style.background=GLOW[winner];card.style.borderColor=BORD[winner];card.style.boxShadow=`0 0 24px ${GLOW[winner]}`;
   document.getElementById('r-emoji').textContent=EMOJI[winner];
   const rn=document.getElementById('r-name');rn.textContent=winner;rn.style.color=COLORS[winner];
-  document.getElementById('r-meta').textContent=`Majority vote from ${nearest.length} template${nearest.length>1?'s':''}`;
-
+  document.getElementById('r-meta').textContent=`Majority vote · ${nearest.length} templates`;
   const vEl=document.getElementById('vote-bars');vEl.innerHTML='';
   for(const[lbl,cnt]of Object.entries(tally)){
     const pct=Math.round(cnt/K*100);
-    const row=document.createElement('div');row.className='vote-row';
-    row.innerHTML=`<span style="width:20px;text-align:center;font-size:13px">${EMOJI[lbl]}</span>
-      <div class="vote-bar-bg"><div class="vote-bar-fill" style="width:${pct}%;background:${COLORS[lbl]}"></div></div>
-      <span style="width:16px;text-align:right;font-size:11px;font-weight:600;color:${COLORS[lbl]}">${cnt}</span>`;
+    const row=document.createElement('div');row.className='vrow';
+    row.innerHTML=`<span style="width:18px;text-align:center;font-size:13px">${EMOJI[lbl]}</span>
+      <div class="vbg"><div class="vfill" style="width:${pct}%;background:${COLORS[lbl]}"></div></div>
+      <span style="width:14px;text-align:right;font-size:11px;font-weight:700;color:${COLORS[lbl]}">${cnt}</span>`;
     vEl.appendChild(row);
   }
-
-  const nbEl=document.getElementById('neighbors-list');nbEl.innerHTML='';
+  const nbEl=document.getElementById('nb-list');nbEl.innerHTML='';
   nearest.forEach(({sample,dist},i)=>{
     const row=document.createElement('div');row.className='nb-item';
     row.innerHTML=`<span class="nb-rank">#${i+1}</span>
-      <span style="font-size:14px">${EMOJI[sample.label]}</span>
-      <span style="font-size:11px;color:${COLORS[sample.label]};font-weight:600">${sample.label}</span>
-      <canvas id="nb-${i}" width="34" height="34" style="border-radius:5px;background:#080b18;flex-shrink:0"></canvas>
-      <span class="nb-dist">${dist.toFixed(1)}</span>`;
+      <span style="font-size:13px">${EMOJI[sample.label]}</span>
+      <span style="color:${COLORS[sample.label]};font-size:11px;font-weight:700;flex:1">${sample.label}</span>
+      <canvas id="nb-${i}" width="32" height="32" style="border-radius:4px;background:#080b18;flex-shrink:0"></canvas>
+      <span style="color:var(--muted);font-size:10px;width:32px;text-align:right">${dist.toFixed(1)}</span>`;
     nbEl.appendChild(row);
     setTimeout(()=>drawMini(`nb-${i}`,sample.points,COLORS[sample.label]),0);
   });
 }
 
+/* ═══════════════════════════════════════════════
+   MINI STROKE HELPER
+═══════════════════════════════════════════════ */
 function drawMini(id,pts,color){
   const c=document.getElementById(id);if(!c)return;
   const ctx=c.getContext('2d'),W=c.width,H=c.height,P=4;
-  ctx.clearRect(0,0,W,H);ctx.strokeStyle=color;ctx.lineWidth=1.5;
+  ctx.clearRect(0,0,W,H);ctx.strokeStyle=color;ctx.lineWidth=1.4;
   ctx.lineCap='round';ctx.lineJoin='round';ctx.shadowColor=color;ctx.shadowBlur=4;
   ctx.beginPath();
   pts.forEach(([x,y],i)=>{
@@ -498,263 +731,202 @@ function drawMini(id,pts,color){
   });
   ctx.stroke();
 }
-
-// Render sidebar gesture previews
 function renderPreviews(){
   for(const cls of CLASSES){
-    const sample=training.find(d=>d.label===cls);
-    if(sample)setTimeout(()=>drawMini(`prev-${cls}`,sample.points,COLORS[cls]),0);
+    const s=training.find(d=>d.label===cls);
+    if(s)setTimeout(()=>drawMini(`prev-${cls}`,s.points,COLORS[cls]),0);
   }
 }
-renderPreviews();
 
-// Controls
+/* ═══════════════════════════════════════════════
+   RESPONSIVE CANVAS via ResizeObserver
+═══════════════════════════════════════════════ */
+let _rszT=null;
+const ro=new ResizeObserver(()=>{
+  clearTimeout(_rszT);
+  _rszT=setTimeout(()=>{
+    if(document.getElementById('view-canvas').offsetParent!==null)initStage();
+  },60);
+});
+
+/* ═══════════════════════════════════════════════
+   TABS
+═══════════════════════════════════════════════ */
+let analyticsReady=false;
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+    tab.classList.add('on');
+    const t=tab.dataset.tab;
+    document.getElementById('view-canvas').style.display   =t==='canvas'   ?'flex':'none';
+    document.getElementById('view-analytics').style.display=t==='analytics'?'flex':'none';
+    if(t==='analytics'&&!analyticsReady){buildAnalytics();analyticsReady=true;}
+    if(t==='canvas')requestAnimationFrame(()=>initStage());
+  });
+});
+
+/* ═══════════════════════════════════════════════
+   CONTROLS
+═══════════════════════════════════════════════ */
 document.getElementById('k-slider').addEventListener('input',e=>{
   K=parseInt(e.target.value);
   document.getElementById('k-display').textContent=K;
   document.getElementById('k-badge').textContent=`K = ${K}`;
 });
 document.getElementById('btn-clear').addEventListener('click',()=>{
-  currentPoints=[];
-  drawLayer.destroyChildren();drawLayer.draw();
-  showHint();
+  currentPts=[];
+  if(drawL){drawL.destroyChildren();drawL.draw();}
+  showHint();hideOverlay();
   const card=document.getElementById('result-card');
   card.style.background=card.style.borderColor=card.style.boxShadow='';
   document.getElementById('r-emoji').textContent='✏️';
   const rn=document.getElementById('r-name');rn.textContent='Draw a gesture';rn.style.color='var(--muted)';
   document.getElementById('r-meta').textContent='Draw on the canvas to begin';
   document.getElementById('vote-bars').innerHTML='';
-  document.getElementById('neighbors-list').innerHTML='<span style="color:var(--muted);font-style:italic">—</span>';
+  document.getElementById('nb-list').innerHTML='<span style="color:var(--muted);font-style:italic">—</span>';
 });
-
-/* ═══════════════════════════════════════════════
-   TABS
-═══════════════════════════════════════════════ */
-let analyticsBuilt=false;
-document.querySelectorAll('.tab').forEach(tab=>{
-  tab.addEventListener('click',()=>{
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
-    tab.classList.add('on');
-    const t=tab.dataset.tab;
-    document.getElementById('view-canvas').style.display=t==='canvas'?'flex':'none';
-    const av=document.getElementById('view-analytics');
-    av.style.display=t==='analytics'?'flex':'none';
-    if(t==='analytics'&&!analyticsBuilt){buildAnalytics();analyticsBuilt=true;}
-  });
-});
+function openSb(){document.getElementById('sidebar').classList.add('open');document.getElementById('sb-backdrop').classList.add('show');}
+function closeSb(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-backdrop').classList.remove('show');}
+document.getElementById('menu-btn').addEventListener('click',openSb);
+document.getElementById('sb-close').addEventListener('click',closeSb);
+document.getElementById('sb-backdrop').addEventListener('click',closeSb);
 
 /* ═══════════════════════════════════════════════
    ANALYTICS
 ═══════════════════════════════════════════════ */
-function addNoise(pts,str){return pts.map(([x,y])=>[x+(Math.random()-.5)*str*100,y+(Math.random()-.5)*str*100]);}
-
-function simulateAccuracy(k,testCount=40,noiseStr=0.07){
+function addNoise(pts,s){return pts.map(([x,y])=>[x+(Math.random()-.5)*s*100,y+(Math.random()-.5)*s*100]);}
+function simulateAccuracy(k,n=40,ns=.07){
   const res={};
-  for(const cls of CLASSES){
-    let correct=0;
-    for(let i=0;i<testCount;i++){
-      const raw=GEN[cls]((8+i)%16);
-      const q=addNoise(resample(normalize(raw),32),noiseStr+Math.random()*.04);
-      const{winner}=knn(q,k);
-      if(winner===cls)correct++;
-    }
-    res[cls]=correct/testCount;
-  }
+  for(const cls of CLASSES){let c=0;for(let i=0;i<n;i++){const q=addNoise(resample(normalize(GEN[cls]((8+i)%16)),32),ns+Math.random()*.04);if(knn(q,k).winner===cls)c++;}res[cls]=c/n;}
   return res;
 }
-
-function buildConfusion(k=3,testCount=20){
-  const mat={};
+function buildConfusion(k=3,n=20){
+  const mat={},dc=[],dw=[];
   for(const c of CLASSES){mat[c]={};for(const d of CLASSES)mat[c][d]=0;}
-  const distCorrect=[],distWrong=[];
-  for(const cls of CLASSES){
-    for(let i=0;i<testCount;i++){
-      const raw=GEN[cls]((10+i)%16);
-      const q=addNoise(resample(normalize(raw),32),.08);
-      const{winner,nearest}=knn(q,k);
-      mat[cls][winner]=(mat[cls][winner]||0)+1;
-      const d=nearest[0].dist;
-      if(winner===cls)distCorrect.push(d);else distWrong.push(d);
-    }
+  for(const cls of CLASSES)for(let i=0;i<n;i++){
+    const q=addNoise(resample(normalize(GEN[cls]((10+i)%16)),32),.08);
+    const{winner,nearest}=knn(q,k);
+    mat[cls][winner]=(mat[cls][winner]||0)+1;
+    const d=nearest[0].dist;(winner===cls?dc:dw).push(d);
   }
-  return{mat,distCorrect,distWrong};
+  return{mat,dc,dw};
 }
-
-let kChartInst=null,distChartInst=null;
-
+let kCI=null,dCI=null;
 function buildAnalytics(){
-  const K3=simulateAccuracy(3,40);
-  const overallAcc=Object.values(K3).reduce((a,b)=>a+b,0)/CLASSES.length;
-
-  document.getElementById('m-acc').textContent=(overallAcc*100).toFixed(1)+'%';
-  document.getElementById('m-dist').textContent='14.2';
-
-  const sorted=[...CLASSES].sort((a,b)=>K3[b]-K3[a]);
-  const best=sorted[0],worst=sorted[sorted.length-1];
+  const K3=simulateAccuracy(3);
+  const ov=Object.values(K3).reduce((a,b)=>a+b,0)/CLASSES.length;
+  document.getElementById('m-acc').textContent=(ov*100).toFixed(1)+'%';
+  let ds=0,dn=0;
+  for(const cls of CLASSES){const q=resample(normalize(GEN[cls](0)),32);const{nearest,winner}=knn(q,3);if(winner===cls){ds+=nearest[0].dist;dn++;}}
+  document.getElementById('m-dist').textContent=dn?(ds/dn).toFixed(1):'—';
+  const s=[...CLASSES].sort((a,b)=>K3[b]-K3[a]);
+  const best=s[0],worst=s[s.length-1];
   document.getElementById('m-best').textContent=EMOJI[best]+' '+best;
   document.getElementById('m-best-acc').textContent=(K3[best]*100).toFixed(0)+'% accuracy';
   document.getElementById('m-worst').textContent=EMOJI[worst]+' '+worst;
   document.getElementById('m-worst-acc').textContent=(K3[worst]*100).toFixed(0)+'% accuracy';
 
-  // Per-class accuracy bars
-  const ab=document.getElementById('acc-bars');ab.innerHTML='';
+  const ab=document.getElementById('acc-bars-an');ab.innerHTML='';
   for(const cls of CLASSES){
     const pct=Math.round(K3[cls]*100);
-    const row=document.createElement('div');row.className='acc-row';
+    const row=document.createElement('div');row.className='a-acc-row';
     row.innerHTML=`<span style="width:90px;font-size:11px;color:${COLORS[cls]}">${EMOJI[cls]} ${cls}</span>
-      <div class="acc-bar-bg"><div class="acc-bar-fill" style="width:${pct}%;background:${COLORS[cls]}"></div></div>
-      <span style="width:36px;text-align:right;font-size:11px;font-weight:600;color:${COLORS[cls]}">${pct}%</span>`;
+      <div class="a-acc-bg"><div class="a-acc-fill" style="width:0%;background:${COLORS[cls]}"></div></div>
+      <span style="width:34px;text-align:right;font-size:11px;font-weight:700;color:${COLORS[cls]}">${pct}%</span>`;
     ab.appendChild(row);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{row.querySelector('.a-acc-fill').style.width=pct+'%';}));
   }
 
-  // K vs accuracy
   const kVals=[1,2,3,4,5,6,7,8,9];
   const kAccs=kVals.map(k=>{const r=simulateAccuracy(k,20,.07);return Math.round(Object.values(r).reduce((a,b)=>a+b,0)/CLASSES.length*100);});
-  if(kChartInst)kChartInst.destroy();
-  kChartInst=new Chart(document.getElementById('k-chart'),{
+  if(kCI)kCI.destroy();
+  kCI=new Chart(document.getElementById('k-chart'),{
     type:'line',
-    data:{
-      labels:kVals.map(k=>'K='+k),
-      datasets:[{
-        label:'Accuracy',data:kAccs,
-        borderColor:'#a78bfa',backgroundColor:'rgba(167,139,250,.08)',
-        tension:.35,fill:true,
-        pointRadius:kVals.map(k=>k===K?7:3),
-        pointBackgroundColor:kVals.map(k=>k===K?'#ef4444':'#a78bfa'),
-        pointBorderColor:kVals.map(k=>k===K?'#ef4444':'#a78bfa'),
-        pointBorderWidth:kVals.map(k=>k===K?2:1),
-      }]
-    },
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.parsed.y+'%'}}},
-      scales:{
-        y:{min:50,max:100,grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#5a6080',font:{size:10},callback:v=>v+'%'}},
-        x:{grid:{display:false},ticks:{color:'#5a6080',font:{size:10}}}
-      }
-    }
+    data:{labels:kVals.map(k=>'K='+k),datasets:[{data:kAccs,borderColor:'#a78bfa',backgroundColor:'rgba(167,139,250,.07)',tension:.35,fill:true,
+      pointRadius:kVals.map(k=>k===K?7:3),
+      pointBackgroundColor:kVals.map(k=>k===K?'#ef4444':'#a78bfa'),
+      pointBorderColor:kVals.map(k=>k===K?'#ef4444':'#a78bfa')}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y+'%'}}},
+      scales:{y:{min:50,max:100,grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#5a6080',font:{size:10},callback:v=>v+'%'}},
+              x:{grid:{display:false},ticks:{color:'#5a6080',font:{size:10}}}}}
   });
 
-  // Confusion matrix
-  const{mat,distCorrect,distWrong}=buildConfusion(3,20);
-  let cfHtml=`<div style="display:grid;grid-template-columns:40px repeat(5,1fr);gap:2px;margin-bottom:3px;font-size:9px;color:var(--muted)"><span></span>`;
-  for(const c of CLASSES)cfHtml+=`<span style="text-align:center">${EMOJI[c]}</span>`;
-  cfHtml+='</div>';
+  const{mat,dc,dw}=buildConfusion(3,20);
+  let cf=`<div style="display:grid;grid-template-columns:36px repeat(5,1fr);gap:2px;margin-bottom:3px;font-size:9px;color:var(--muted)"><span></span>`;
+  for(const c of CLASSES)cf+=`<span style="text-align:center">${EMOJI[c]}</span>`;cf+='</div>';
   for(const actual of CLASSES){
-    cfHtml+=`<div style="display:grid;grid-template-columns:40px repeat(5,1fr);gap:2px;margin-bottom:2px">
-      <span style="font-size:10px;color:var(--muted);display:flex;align-items:center">${EMOJI[actual]}</span>`;
-    const total=Object.values(mat[actual]).reduce((a,b)=>a+b,0)||1;
-    for(const pred of CLASSES){
-      const cnt=mat[actual][pred]||0,pct=Math.round(cnt/total*100),diag=actual===pred;
-      const bg=diag?COLORS[actual]:`rgba(255,255,255,${pct>0?Math.max(.04,pct/100*.25):0})`;
-      const fg=diag?'#fff':'rgba(255,255,255,.7)';
-      cfHtml+=`<div class="cf-cell" style="background:${bg};color:${fg}">${pct}</div>`;
-    }
-    cfHtml+='</div>';
+    cf+=`<div style="display:grid;grid-template-columns:36px repeat(5,1fr);gap:2px;margin-bottom:2px"><span style="font-size:10px;color:var(--muted);display:flex;align-items:center">${EMOJI[actual]}</span>`;
+    const tot=Object.values(mat[actual]).reduce((a,b)=>a+b,0)||1;
+    for(const pred of CLASSES){const cnt=mat[actual][pred]||0,pct=Math.round(cnt/tot*100),diag=actual===pred;cf+=`<div class="cf-cell" style="background:${diag?COLORS[actual]:`rgba(255,255,255,${pct>0?Math.max(.04,pct/100*.22):0})`};color:${diag?'#fff':'rgba(255,255,255,.75)'}">${pct}</div>`;}
+    cf+='</div>';
   }
-  document.getElementById('cf-wrap').innerHTML=cfHtml;
+  document.getElementById('cf-wrap').innerHTML=cf;
 
-  // Distance distribution chart
-  function bucket(arr,bins=12){
-    if(!arr.length)return{labels:[],counts:[]};
-    const mn=Math.min(...arr),mx=Math.max(...arr),step=(mx-mn)/bins;
-    const labels=[],counts=[];
-    for(let i=0;i<bins;i++){labels.push((mn+i*step).toFixed(0));counts.push(0);}
-    for(const v of arr){const idx=Math.min(Math.floor((v-mn)/step),bins-1);counts[idx]++;}
-    return{labels,counts};
-  }
-  const bc=bucket(distCorrect),bw=bucket(distWrong);
-  if(distChartInst)distChartInst.destroy();
-  distChartInst=new Chart(document.getElementById('dist-chart'),{
+  function bkt(arr,bins=12){if(!arr.length)return{labels:[],counts:[]};const mn=Math.min(...arr),mx=Math.max(...arr),st=(mx-mn)/bins,L=[],C=[];for(let i=0;i<bins;i++){L.push((mn+i*st).toFixed(0));C.push(0);}for(const v of arr){C[Math.min(Math.floor((v-mn)/st),bins-1)]++;}return{labels:L,counts:C};}
+  const bc=bkt(dc),bw2=bkt(dw);
+  if(dCI)dCI.destroy();
+  dCI=new Chart(document.getElementById('dist-chart'),{
     type:'bar',
-    data:{
-      labels:bc.labels,
-      datasets:[
-        {label:'Correct',data:bc.counts,backgroundColor:'rgba(56,189,248,.5)',borderColor:'#38bdf8',borderWidth:1},
-        {label:'Wrong',data:bw.counts,backgroundColor:'rgba(249,115,22,.5)',borderColor:'#f97316',borderWidth:1},
-      ]
-    },
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y}`}}},
-      scales:{
-        x:{grid:{display:false},ticks:{color:'#5a6080',font:{size:9}},title:{display:true,text:'Euclidean distance',color:'#5a6080',font:{size:10}}},
-        y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#5a6080',font:{size:10}},title:{display:true,text:'Count',color:'#5a6080',font:{size:10}}}
-      }
-    }
+    data:{labels:bc.labels,datasets:[
+      {label:'Correct',data:bc.counts,backgroundColor:'rgba(56,189,248,.45)',borderColor:'#38bdf8',borderWidth:1},
+      {label:'Wrong',  data:bw2.counts,backgroundColor:'rgba(249,115,22,.45)',borderColor:'#f97316',borderWidth:1}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{display:false},ticks:{color:'#5a6080',font:{size:9}},title:{display:true,text:'Euclidean distance',color:'#5a6080',font:{size:9}}},
+              y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#5a6080',font:{size:9}},title:{display:true,text:'Count',color:'#5a6080',font:{size:9}}}}}
   });
-  // Legend
-  const dl=document.createElement('div');
-  dl.style.cssText='display:flex;gap:16px;font-size:10px;color:#5a6080;margin-top:6px';
-  dl.innerHTML=`<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#38bdf8;display:inline-block"></span>Correct</span>
-    <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#f97316;display:inline-block"></span>Wrong</span>`;
-  document.getElementById('dist-chart').parentElement.after(dl);
+  document.getElementById('dist-legend').innerHTML=
+    `<span><span class="swatch" style="background:#38bdf8"></span>Correct</span>
+     <span><span class="swatch" style="background:#f97316"></span>Wrong</span>`;
 
-  // Pipeline
   const steps=[
-    {name:'Raw points',desc:'x,y pixel coords',color:'#3b82f6',icon:'●●●'},
-    {name:'Normalize',desc:'scale & center invariant',color:'#8b5cf6',icon:'⊞'},
-    {name:'Resample',desc:'32 uniform-arc points',color:'#a78bfa',icon:'≈≈≈'},
-    {name:'64-dim vector',desc:'feature space ℝ⁶⁴',color:'#06b6d4',icon:'[v]'},
-    {name:'Euclidean dist',desc:'vs all 40 templates',color:'#f97316',icon:'d(·)'},
-    {name:'Sort & pick K',desc:`top ${K} neighbors`,color:'#facc15',icon:'↑↓'},
-    {name:'Majority vote',desc:'label assigned',color:'#22c55e',icon:'✓'},
+    {n:'Raw points',d:'x,y pixel coords',c:'#3b82f6',i:'●●●'},
+    {n:'Normalize',d:'scale & center invariant',c:'#8b5cf6',i:'⊞'},
+    {n:'Resample',d:'32 arc-uniform pts',c:'#a78bfa',i:'≈≈≈'},
+    {n:'64-dim vec',d:'feature space ℝ⁶⁴',c:'#06b6d4',i:'[v]'},
+    {n:'Euclidean',d:'dist vs 40 templates',c:'#f97316',i:'d(·)'},
+    {n:'Sort & K',d:`top ${K} neighbors`,c:'#facc15',i:'↑↓'},
+    {n:'Vote',d:'label + confidence',c:'#22c55e',i:'✓'},
   ];
   const pl=document.getElementById('pipeline');pl.innerHTML='';
   steps.forEach((s,i)=>{
-    const div=document.createElement('div');div.className='pipe-step';
-    div.innerHTML=`<div class="pipe-box" style="background:${s.color}18;border-color:${s.color}44;color:${s.color}">
-      <div class="pipe-icon">${s.icon}</div>
-      <div>${s.name}</div>
-    </div>
-    <div class="pipe-desc">${s.desc}</div>`;
-    pl.appendChild(div);
-    if(i<steps.length-1){const a=document.createElement('div');a.className='pipe-arrow';a.textContent='→';pl.appendChild(a);}
+    const d=document.createElement('div');d.className='pipe-step';
+    d.innerHTML=`<div class="pipe-box" style="background:${s.c}18;border-color:${s.c}44;color:${s.c}"><div class="pipe-ico">${s.i}</div>${s.n}</div><div class="pipe-desc">${s.d}</div>`;
+    pl.appendChild(d);
+    if(i<steps.length-1){const a=document.createElement('div');a.className='pipe-arr';a.textContent='→';pl.appendChild(a);}
   });
 
-  // Simulator buttons
   const sb=document.getElementById('sim-btns');sb.innerHTML='';
   CLASSES.forEach(cls=>{
     const btn=document.createElement('button');btn.className='sim-btn';btn.textContent=`${EMOJI[cls]} ${cls}`;
-    btn.onclick=()=>{
-      document.querySelectorAll('.sim-btn').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      runSim(cls);
-    };
+    btn.onclick=()=>{document.querySelectorAll('.sim-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');runSim(cls);};
     sb.appendChild(btn);
   });
 }
 
-document.getElementById('noise-slider').addEventListener('input',e=>{
-  document.getElementById('noise-val').textContent=e.target.value;
-});
+document.getElementById('noise-slider').addEventListener('input',e=>{document.getElementById('noise-val').textContent=e.target.value;});
 
 function runSim(cls){
-  const noiseStr=parseInt(document.getElementById('noise-slider').value)/100;
-  const raw=GEN[cls](Math.floor(Math.random()*16));
-  const q=addNoise(resample(normalize(raw),32),noiseStr+Math.random()*.04);
+  const ns=parseInt(document.getElementById('noise-slider').value)/100;
+  const q=addNoise(resample(normalize(GEN[cls](Math.floor(Math.random()*16))),32),ns+Math.random()*.04);
   const{winner,tally,nearest}=knn(q,K);
   document.getElementById('sim-output').style.display='block';
   const kl=document.getElementById('sim-knn-list');kl.innerHTML='';
-  nearest.forEach(({sample,dist},i)=>{
-    const d=document.createElement('div');d.className='sim-knn-item';
-    d.innerHTML=`<span style="color:var(--muted);font-size:10px">#${i+1}</span>
-      <span style="color:${COLORS[sample.label]};font-size:11px">${EMOJI[sample.label]} ${sample.label}</span>
-      <span style="color:var(--muted);font-family:var(--font-mono);font-size:10px">${dist.toFixed(1)}</span>`;
-    kl.appendChild(d);
-  });
+  nearest.forEach(({sample,dist},i)=>{const d=document.createElement('div');d.className='sim-k-item';d.innerHTML=`<span style="color:var(--muted);font-size:10px">#${i+1}</span><span style="color:${COLORS[sample.label]}">${EMOJI[sample.label]} ${sample.label}</span><span style="color:var(--muted);font-size:10px">${dist.toFixed(1)}</span>`;kl.appendChild(d);});
   const vEl=document.getElementById('sim-votes');vEl.innerHTML='';
-  for(const[lbl,cnt]of Object.entries(tally)){
-    const pct=Math.round(cnt/K*100);
-    const row=document.createElement('div');row.className='sim-vbar-row';
-    row.innerHTML=`<span style="width:80px;color:${COLORS[lbl]};font-size:11px">${EMOJI[lbl]} ${lbl}</span>
-      <div class="sim-vbar-bg"><div class="sim-vbar-fill" style="width:${pct}%;background:${COLORS[lbl]}"></div></div>
-      <span style="width:16px;text-align:right;color:${COLORS[lbl]};font-weight:600;font-size:11px">${cnt}</span>`;
-    vEl.appendChild(row);
-  }
-  const correct=winner===cls;
-  const vd=document.getElementById('sim-verdict');
-  vd.innerHTML=`<span style="color:${correct?'#22c55e':'#ef4444'};font-weight:600">${correct?'✓':'✗'} Drawn as ${EMOJI[cls]} ${cls} → Predicted: ${EMOJI[winner]} ${winner}</span>
-    <span style="color:var(--muted);font-size:10px;margin-left:8px">${correct?'Correct':'Misclassification'}</span>`;
+  for(const[lbl,cnt]of Object.entries(tally)){const pct=Math.round(cnt/K*100);const row=document.createElement('div');row.className='sim-vbar-row';row.innerHTML=`<span style="width:76px;color:${COLORS[lbl]}">${EMOJI[lbl]} ${lbl}</span><div class="sim-vbg"><div class="sim-vfill" style="width:${pct}%;background:${COLORS[lbl]}"></div></div><span style="width:14px;text-align:right;color:${COLORS[lbl]};font-weight:700">${cnt}</span>`;vEl.appendChild(row);}
+  const ok=winner===cls;
+  document.getElementById('sim-verdict').innerHTML=`<span style="color:${ok?'#22c55e':'#ef4444'};font-weight:700">${ok?'✓':'✗'} ${EMOJI[cls]} ${cls} → ${EMOJI[winner]} ${winner}</span><span style="color:var(--muted);font-size:10px;margin-left:8px">${ok?'Correct':'Misclassification'}</span>`;
 }
+
+/* ═══════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded',()=>{
+  renderPreviews();
+  initStage();
+  ro.observe(document.getElementById('view-canvas'));
+});
 </script>
 </body>
 </html>
