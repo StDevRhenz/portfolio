@@ -1,5 +1,5 @@
 import React from 'react';
-import Result from '../assets/updated-resume.pdf';
+// import Result from '../assets/updated-resume.pdf';
 
 function Home() {
     // const handleCvClick = () => {
