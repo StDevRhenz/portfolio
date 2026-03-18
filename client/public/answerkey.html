@@ -1,732 +1,760 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KNN Interactive Simulation</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Gesture KNN — Live Recognition + Analytics</title>
+<script src="https://unpkg.com/konva@9/konva.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#05070f;--surface:#0c0f1e;--surface2:#12172b;--border:rgba(255,255,255,.06);--border2:rgba(255,255,255,.12);
+  --text:#e8eaf0;--muted:#5a6080;--muted2:#3a4060;
+  --fire:#f97316;--lightning:#facc15;--water:#38bdf8;--wind:#94a3b8;--portal:#a78bfa;
+  --accent:#a78bfa;--accent2:#7c3aed;
+  --font-display:'Syne',sans-serif;--font-mono:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font-mono)}
+::selection{background:rgba(167,139,250,.25)}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--muted2);border-radius:2px}
 
-  <!-- Tailwind CSS (Play CDN — supports JIT / arbitrary values) -->
-  <script src="https://cdn.tailwindcss.com"></script>
+/* ── Layout ── */
+#app{display:flex;height:100vh;overflow:hidden}
+#sidebar{width:280px;flex-shrink:0;height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
 
-  <!-- Konva.js v9 — 2D canvas library for interactive graphics -->
-  <script src="https://unpkg.com/konva@9/konva.min.js"></script>
+/* ── Sidebar ── */
+.sb-header{padding:20px 20px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.sb-logo{font-family:var(--font-display);font-weight:800;font-size:20px;letter-spacing:-.5px;color:var(--text)}
+.sb-logo span{color:var(--accent)}
+.sb-sub{font-size:10px;color:var(--muted);margin-top:3px;letter-spacing:.08em;text-transform:uppercase}
+.sb-body{flex:1;overflow-y:auto;padding:16px}
+.sb-section{margin-bottom:20px}
+.sb-label{font-size:9px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px;font-family:var(--font-display)}
 
-  <style>
-    /* ─── Custom range slider ───────────────────────────────────── */
-    input[type="range"] { -webkit-appearance: none; appearance: none; background: transparent; width: 100%; }
-    input[type="range"]::-webkit-slider-track {
-      background: #1e293b; height: 6px; border-radius: 3px;
-      border: 1px solid #334155;
-    }
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none; appearance: none;
-      width: 18px; height: 18px;
-      background: radial-gradient(circle, #4ade80, #16a34a);
-      border-radius: 50%; cursor: pointer;
-      box-shadow: 0 0 10px rgba(74, 222, 128, 0.55);
-      border: 2px solid #86efac;
-      margin-top: -6px;
-    }
-    input[type="range"]::-webkit-slider-thumb:hover {
-      box-shadow: 0 0 18px rgba(74, 222, 128, 0.8);
-    }
+/* Gesture cards */
+.g-card{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);margin-bottom:5px;cursor:pointer;transition:border-color .15s,background .15s}
+.g-card:hover{border-color:var(--border2);background:rgba(255,255,255,.04)}
+.g-card.active{border-color:rgba(167,139,250,.4);background:rgba(167,139,250,.06)}
+.g-card canvas{border-radius:5px;background:#080b18;flex-shrink:0}
+.g-card .name{font-family:var(--font-display);font-weight:700;font-size:12px}
+.g-card .hint{font-size:10px;color:var(--muted);margin-top:2px}
 
-    /* ─── Scrollbar ─────────────────────────────────────────────── */
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: #020617; }
-    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 2px; }
+/* K slider */
+.k-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.k-val{font-family:var(--font-display);font-weight:800;font-size:22px;color:var(--accent)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;background:transparent}
+input[type=range]::-webkit-slider-track{background:var(--surface2);height:4px;border-radius:2px;border:1px solid var(--border2)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;background:var(--accent);border-radius:50%;cursor:pointer;border:2px solid rgba(167,139,250,.4);margin-top:-6px}
+.k-hints{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-top:6px;letter-spacing:.04em}
 
-    /* ─── Button active states (glow) ───────────────────────────── */
-    .btn-red-on  {
-      background: rgba(239, 68, 68, 0.18) !important;
-      border-color: #ef4444 !important; color: #fca5a5 !important;
-      box-shadow: 0 0 18px rgba(239, 68, 68, 0.38) !important;
-    }
-    .btn-blue-on {
-      background: rgba(59, 130, 246, 0.18) !important;
-      border-color: #3b82f6 !important; color: #93c5fd !important;
-      box-shadow: 0 0 18px rgba(59, 130, 246, 0.38) !important;
-    }
+/* Result card */
+.result-card{border-radius:10px;padding:14px;border:1px solid var(--border);background:var(--surface2);transition:border-color .3s,background .3s,box-shadow .3s}
+.result-emoji{font-size:32px;line-height:1}
+.result-name{font-family:var(--font-display);font-weight:800;font-size:20px;color:var(--muted);transition:color .3s;letter-spacing:-.5px}
+.result-meta{font-size:10px;color:var(--muted);margin-top:4px}
+.vote-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:11px}
+.vote-bar-bg{flex:1;height:3px;background:var(--surface2);border-radius:2px;border:1px solid var(--border);overflow:hidden}
+.vote-bar-fill{height:100%;border-radius:2px;transition:width .35s cubic-bezier(.4,0,.2,1)}
 
-    /* ─── Result card ───────────────────────────────────────────── */
-    #result-card { transition: background 0.35s, border-color 0.35s, box-shadow 0.35s; }
-    .card-red  {
-      background: rgba(239, 68, 68, 0.1) !important;
-      border-color: rgba(239, 68, 68, 0.45) !important;
-      box-shadow: 0 0 24px rgba(239, 68, 68, 0.2) !important;
-    }
-    .card-blue {
-      background: rgba(59, 130, 246, 0.1) !important;
-      border-color: rgba(59, 130, 246, 0.45) !important;
-      box-shadow: 0 0 24px rgba(59, 130, 246, 0.2) !important;
-    }
+/* Neighbors */
+.nb-item{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px}
+.nb-rank{color:var(--muted2);width:18px;font-size:10px}
+.nb-dist{color:var(--muted);font-size:10px;margin-left:auto}
 
-    /* ─── Stage shadow ───────────────────────────────────────────── */
-    #stage-wrap {
-      box-shadow:
-        0 0 0 1px rgba(255,255,255,0.06),
-        0 8px 60px rgba(0, 0, 0, 0.85),
-        0 2px 20px rgba(0, 0, 0, 0.6);
-    }
+/* Btn */
+.btn-clear{width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--muted);font-size:11px;cursor:pointer;font-family:var(--font-mono);letter-spacing:.06em;transition:background .15s,color .15s,border-color .15s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-clear:hover{background:var(--surface2);color:var(--text);border-color:var(--border2)}
+.sb-footer{padding:14px 16px;border-top:1px solid var(--border);flex-shrink:0}
 
-    /* ─── Vote bars ─────────────────────────────────────────────── */
-    .vote-bar { transition: width 0.3s cubic-bezier(.4,0,.2,1); }
+/* ── Top tabs ── */
+#tabs{display:flex;gap:0;border-bottom:1px solid var(--border);flex-shrink:0;padding:0 20px;background:var(--surface)}
+.tab{padding:12px 18px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;font-family:var(--font-display);font-weight:600}
+.tab.on{color:var(--accent);border-bottom-color:var(--accent)}
+.tab:hover:not(.on){color:var(--text)}
 
-    /* ─── Konva canvas cursor ─────────────────────────────────────── */
-    .konvajs-content { cursor: crosshair !important; }
-  </style>
+/* ── Canvas view ── */
+#view-canvas{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:12px;overflow:hidden}
+#hint-bar{font-size:11px;color:var(--muted);letter-spacing:.06em;display:flex;align-items:center;gap:10px}
+#k-badge{background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.25);color:var(--accent);font-size:10px;padding:2px 10px;border-radius:20px;font-family:var(--font-display);font-weight:700}
+#stage-wrap{border-radius:14px;overflow:hidden;box-shadow:0 0 0 1px rgba(167,139,250,.08),0 0 60px rgba(139,92,246,.1),0 20px 80px rgba(0,0,0,.8)}
+.konvajs-content{cursor:crosshair!important}
+#stage-container{touch-action:none}
+
+/* ── Analytics view ── */
+#view-analytics{flex:1;overflow-y:auto;padding:24px;display:none;gap:20px;flex-direction:column}
+.an-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.an-grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.an-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px}
+.an-card-title{font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;font-family:var(--font-display)}
+.metric-val{font-family:var(--font-display);font-weight:800;font-size:26px;letter-spacing:-.5px}
+.metric-sub{font-size:10px;color:var(--muted);margin-top:4px}
+.metric-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px}
+.chart-wrap{position:relative}
+.acc-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:11px}
+.acc-bar-bg{flex:1;height:6px;background:var(--surface2);border-radius:3px;border:1px solid var(--border);overflow:hidden}
+.acc-bar-fill{height:100%;border-radius:3px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+/* Confusion */
+.cf-wrap{overflow:auto}
+.cf-grid{display:grid;gap:2px}
+.cf-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:4px;font-size:11px;font-weight:600;font-family:var(--font-display)}
+
+/* Pipeline */
+.pipe-wrap{display:flex;align-items:flex-start;gap:0;overflow-x:auto;padding:4px 0 8px}
+.pipe-step{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;min-width:90px}
+.pipe-box{width:100%;padding:10px 8px;border-radius:8px;border:1px solid;font-size:10px;text-align:center;font-family:var(--font-display);font-weight:700;letter-spacing:.02em}
+.pipe-icon{font-size:16px;margin-bottom:3px}
+.pipe-desc{font-size:9px;color:var(--muted);text-align:center;letter-spacing:.02em;max-width:90px}
+.pipe-arrow{color:var(--muted2);font-size:18px;padding:0 3px;flex-shrink:0;margin-top:14px;align-self:flex-start}
+
+/* Live sim */
+.sim-btn{flex:1;min-width:80px;padding:7px 6px;font-size:11px;border-radius:8px;border:1px solid var(--border);background:transparent;cursor:pointer;color:var(--text);font-family:var(--font-mono);transition:background .12s,border-color .12s}
+.sim-btn:hover,.sim-btn.active{background:var(--surface2);border-color:var(--border2)}
+.sim-knn{display:flex;flex-direction:column;gap:4px}
+.sim-knn-item{display:flex;justify-content:space-between;align-items:center;padding:5px 8px;border-radius:6px;background:var(--surface2);font-size:11px}
+.sim-vbar-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:11px}
+.sim-vbar-bg{flex:1;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.sim-vbar-fill{height:100%;border-radius:3px;transition:width .3s}
+.verdict{padding:8px 12px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);font-size:12px;margin-top:8px}
+
+/* Noise slider */
+.noise-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:11px;color:var(--muted)}
+</style>
 </head>
+<body>
+<div id="app">
 
-<body class="bg-slate-950 text-slate-100 h-screen flex overflow-hidden select-none antialiased">
+<!-- ══════════════════ SIDEBAR ══════════════════ -->
+<aside id="sidebar">
+  <div class="sb-header">
+    <div class="sb-logo">Gesture<span>KNN</span></div>
+    <div class="sb-sub">Draw · Classify · Analyze</div>
+  </div>
 
-  <!-- ═══════════════════════════════════════════════════════════════
-       SIDE PANEL — Controls, result, stats
-  ═══════════════════════════════════════════════════════════════ -->
-  <aside id="side-panel"
-    class="w-72 h-screen bg-slate-900 border-r border-slate-800
-           flex flex-col p-5 gap-5 overflow-y-auto flex-shrink-0">
-
-    <!-- Header -->
-    <div class="pb-4 border-b border-slate-800">
-      <div class="flex items-center gap-2 mb-2">
-        <span class="relative flex h-2 w-2">
-          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-          <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-        </span>
-        <span class="text-xs font-semibold text-slate-500 uppercase tracking-widest">Live Simulation</span>
+  <div class="sb-body">
+    <!-- Gesture reference -->
+    <div class="sb-section">
+      <div class="sb-label">Gesture Library</div>
+      <div class="g-card" data-cls="Fire">
+        <canvas id="prev-Fire" width="40" height="40"></canvas>
+        <div><div class="name" style="color:var(--fire)">🔥 Fire</div><div class="hint">Wavy upward stroke</div></div>
       </div>
-      <h1 class="text-2xl font-extrabold tracking-tight text-white">KNN Simulator</h1>
-      <p class="text-slate-500 text-xs mt-0.5">K-Nearest Neighbors Visualization</p>
-    </div>
-
-    <!-- ── Class selector ───────────────────────────────────────── -->
-    <div>
-      <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2.5">
-        Training Data
-      </p>
-      <div class="grid grid-cols-2 gap-2">
-        <button id="btn-red"
-          class="py-2.5 rounded-xl font-semibold text-sm transition-all duration-200
-                 bg-slate-800 text-slate-400 border border-slate-700">
-          <span class="text-red-400 mr-1">●</span>Red Class
-        </button>
-        <button id="btn-blue"
-          class="py-2.5 rounded-xl font-semibold text-sm transition-all duration-200
-                 bg-slate-800 text-slate-400 border border-slate-700">
-          <span class="text-blue-400 mr-1">●</span>Blue Class
-        </button>
+      <div class="g-card" data-cls="Lightning">
+        <canvas id="prev-Lightning" width="40" height="40"></canvas>
+        <div><div class="name" style="color:var(--lightning)">⚡ Lightning</div><div class="hint">Sharp zigzag bolt</div></div>
       </div>
-      <p class="text-slate-600 text-xs mt-2 flex items-center gap-1.5">
-        <!-- cursor icon -->
-        <svg class="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"/>
-        </svg>
-        Click the canvas to place points
-      </p>
-    </div>
-
-    <!-- ── K slider ──────────────────────────────────────────────── -->
-    <div>
-      <div class="flex items-center justify-between mb-2.5">
-        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">K Neighbors</p>
-        <span id="k-display"
-          class="text-green-400 font-extrabold text-lg leading-none bg-green-500/10
-                 border border-green-500/30 rounded-lg px-2.5 py-0.5">3</span>
+      <div class="g-card" data-cls="Water">
+        <canvas id="prev-Water" width="40" height="40"></canvas>
+        <div><div class="name" style="color:var(--water)">💧 Water</div><div class="hint">Horizontal wave</div></div>
       </div>
-      <input type="range" id="k-slider" min="1" max="15" value="3" />
-      <div class="flex justify-between text-xs text-slate-600 mt-1.5">
-        <span>1 — strict</span>
-        <span>flexible — 15</span>
+      <div class="g-card" data-cls="Wind">
+        <canvas id="prev-Wind" width="40" height="40"></canvas>
+        <div><div class="name" style="color:var(--wind)">💨 Wind</div><div class="hint">Smooth arc sweep</div></div>
+      </div>
+      <div class="g-card" data-cls="Portal">
+        <canvas id="prev-Portal" width="40" height="40"></canvas>
+        <div><div class="name" style="color:var(--portal)">🔮 Portal</div><div class="hint">Closed circle loop</div></div>
       </div>
     </div>
 
-    <!-- ── Classification result ─────────────────────────────────── -->
-    <div>
-      <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2.5">
-        Classification
-      </p>
-      <div id="result-card"
-        class="rounded-2xl p-4 border border-slate-700 bg-slate-800">
-        <p class="text-slate-500 text-xs mb-1 font-medium">Classified as</p>
-        <p id="result-label"
-          class="text-4xl font-extrabold tracking-tight leading-none"
-          style="color:#475569">—</p>
-        <p id="result-sub" class="text-slate-600 text-xs mt-2">
-          Add points &amp; drag the star to start
-        </p>
+    <!-- K slider -->
+    <div class="sb-section">
+      <div class="sb-label">K Neighbors</div>
+      <div class="k-row">
+        <span style="font-size:11px;color:var(--muted)">Voting size</span>
+        <span class="k-val" id="k-display">3</span>
       </div>
+      <input type="range" id="k-slider" min="1" max="9" value="3" step="1"/>
+      <div class="k-hints"><span>strict — 1</span><span>9 — flexible</span></div>
+    </div>
 
-      <!-- Vote breakdown bars -->
-      <div class="mt-3.5 space-y-2.5">
-        <div class="flex items-center gap-2.5">
-          <span class="text-red-400 text-xs font-semibold w-8 shrink-0">Red</span>
-          <div class="flex-1 bg-slate-800 rounded-full h-1.5 overflow-hidden border border-slate-700">
-            <div id="red-bar" class="vote-bar bg-red-500 h-full rounded-full" style="width:0%"></div>
+    <!-- Result card -->
+    <div class="sb-section">
+      <div class="sb-label">Classification</div>
+      <div class="result-card" id="result-card">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+          <span class="result-emoji" id="r-emoji">✏️</span>
+          <div>
+            <div style="font-size:10px;color:var(--muted);margin-bottom:2px">Classified as</div>
+            <div class="result-name" id="r-name">Draw a gesture</div>
           </div>
-          <span id="red-vote" class="text-red-400 text-xs font-bold w-4 text-right shrink-0">0</span>
         </div>
-        <div class="flex items-center gap-2.5">
-          <span class="text-blue-400 text-xs font-semibold w-8 shrink-0">Blue</span>
-          <div class="flex-1 bg-slate-800 rounded-full h-1.5 overflow-hidden border border-slate-700">
-            <div id="blue-bar" class="vote-bar bg-blue-500 h-full rounded-full" style="width:0%"></div>
-          </div>
-          <span id="blue-vote" class="text-blue-400 text-xs font-bold w-4 text-right shrink-0">0</span>
-        </div>
+        <div class="result-meta" id="r-meta">Draw on the canvas to begin</div>
       </div>
+      <div id="vote-bars" style="margin-top:10px"></div>
     </div>
 
-    <!-- ── Dataset stats ─────────────────────────────────────────── -->
-    <div>
-      <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2.5">
-        Dataset
-      </p>
-      <div class="grid grid-cols-2 gap-2">
-        <div class="bg-slate-800 rounded-xl p-3 border border-red-900/40">
-          <p id="red-count" class="text-red-400 text-2xl font-extrabold leading-none">0</p>
-          <p class="text-slate-600 text-xs mt-1">Red Points</p>
-        </div>
-        <div class="bg-slate-800 rounded-xl p-3 border border-blue-900/40">
-          <p id="blue-count" class="text-blue-400 text-2xl font-extrabold leading-none">0</p>
-          <p class="text-slate-600 text-xs mt-1">Blue Points</p>
-        </div>
-      </div>
+    <!-- Neighbors -->
+    <div class="sb-section">
+      <div class="sb-label">K Nearest Templates</div>
+      <div id="neighbors-list" style="font-size:11px;color:var(--muted);font-style:italic">—</div>
     </div>
+  </div>
 
-    <!-- ── How-to guide ──────────────────────────────────────────── -->
-    <div class="bg-slate-800/40 rounded-xl p-4 border border-slate-800
-                text-xs text-slate-500 space-y-2 flex-shrink-0">
-      <p class="font-bold text-slate-300 text-sm mb-1">How to use</p>
-      <p><span class="text-slate-400 font-semibold">①</span> Select Red or Blue class above</p>
-      <p><span class="text-slate-400 font-semibold">②</span> Click the canvas to add training points</p>
-      <p><span class="text-slate-400 font-semibold">③</span>
-        Drag the <span class="text-green-400 font-bold">★ green star</span> to classify
-      </p>
-      <p><span class="text-slate-400 font-semibold">④</span>
-        Change K to observe the bias–variance tradeoff
-      </p>
-    </div>
-
-    <!-- ── Reset ─────────────────────────────────────────────────── -->
-    <button id="btn-reset"
-      class="mt-auto py-2.5 rounded-xl text-sm font-semibold text-slate-500
-             border border-slate-700 hover:bg-slate-800 hover:text-slate-300
-             hover:border-slate-600 transition-all duration-200
-             flex items-center justify-center gap-2 flex-shrink-0">
-      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9
-             m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-      </svg>
-      Reset Canvas
+  <div class="sb-footer">
+    <button class="btn-clear" id="btn-clear">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+      Clear Drawing
     </button>
+  </div>
+</aside>
 
-  </aside>
+<!-- ══════════════════ MAIN ══════════════════ -->
+<div id="main">
+  <div id="tabs">
+    <div class="tab on" data-tab="canvas">Canvas</div>
+    <div class="tab" data-tab="analytics">Analytics</div>
+  </div>
 
-  <!-- ═══════════════════════════════════════════════════════════════
-       MAIN AREA — Konva stage
-  ═══════════════════════════════════════════════════════════════ -->
-  <main class="flex-1 flex flex-col items-center justify-center
-               bg-slate-950 gap-4 p-6 overflow-hidden">
-
-    <!-- Subtitle bar -->
-    <div class="flex items-center gap-3 text-sm text-slate-500">
-      <span class="text-green-400 text-base">★</span>
-      Drag the green star to classify a new data point
-      <span id="k-badge"
-        class="bg-green-500/10 text-green-400 text-xs font-bold
-               px-2.5 py-0.5 rounded-full border border-green-500/25">
-        K = 3
-      </span>
+  <!-- Canvas view -->
+  <div id="view-canvas">
+    <div id="hint-bar">
+      <span style="color:var(--accent)">✦</span>
+      Draw any gesture — KNN classifies in real time
+      <span id="k-badge">K = 3</span>
     </div>
-
-    <!-- Konva container -->
-    <div id="stage-wrap" class="rounded-2xl overflow-hidden">
+    <div id="stage-wrap">
       <div id="stage-container"></div>
     </div>
-
-  </main>
-
-
-  <!-- ═══════════════════════════════════════════════════════════════
-       JAVASCRIPT — KNN Simulation + UI Controller
-  ═══════════════════════════════════════════════════════════════ -->
-  <script>
-  'use strict';
-
-  /* ================================================================
-     KNNSimulation
-     Owns the Konva stage, all layers, data points, and the KNN logic.
-  ================================================================ */
-  class KNNSimulation {
-    constructor(containerId) {
-      /** @type {Array<{x:number, y:number, color:string, circle:Konva.Circle}>} */
-      this.dataPoints  = [];
-      this.k           = 3;          // current K value
-      this.activeClass = 'red';      // class selected by the user
-      this.queryPos    = { x: 0, y: 0 }; // position of the green star
-
-      this._initStage(containerId);
-      this._initLayers();
-      this._initStar();
-      this._initStageEvents();
-      this._seedData();   // pre-load a few demo points so the canvas isn't empty
-      this.update();
-    }
-
-    /* ──────────────────────────────────────────────────────────────
-       INITIALIZATION
-    ────────────────────────────────────────────────────────────── */
-
-    /** Calculate available dimensions and create the Konva.Stage. */
-    _initStage(containerId) {
-      const panelW  = document.getElementById('side-panel').offsetWidth;
-      const padX    = 48;  // 24 px each side
-      const padY    = 80;  // header hint + padding
-
-      // Use as much space as is available, but cap at reasonable maxima
-      this.W = Math.min(Math.max(window.innerWidth  - panelW - padX, 380), 1080);
-      this.H = Math.min(Math.max(window.innerHeight - padY,          340),  700);
-
-      this.stage = new Konva.Stage({
-        container: containerId,
-        width:  this.W,
-        height: this.H,
-      });
-
-      // Query star starts in the centre of the canvas
-      this.queryPos = { x: this.W / 2, y: this.H / 2 };
-    }
-
-    /**
-     * Build four layers in Z-order (bottom → top):
-     *   bgLayer     – static grid background
-     *   lineLayer   – dashed connection lines to K neighbours
-     *   circleLayer – training-point circles
-     *   starLayer   – draggable query star (always on top)
-     */
-    _initLayers() {
-      this.bgLayer     = new Konva.Layer();
-      this.lineLayer   = new Konva.Layer();
-      this.circleLayer = new Konva.Layer();
-      this.starLayer   = new Konva.Layer();
-
-      this.stage.add(this.bgLayer, this.lineLayer, this.circleLayer, this.starLayer);
-      this._drawGrid();
-    }
-
-    /** Draw the dark slate background with a subtle dot/line grid. */
-    _drawGrid() {
-      // Solid background fill
-      this.bgLayer.add(new Konva.Rect({
-        x: 0, y: 0, width: this.W, height: this.H,
-        fill: '#0b1120',    // near-black blue
-      }));
-
-      const STEP  = 48;
-      const COLOR = 'rgba(30, 41, 59, 0.7)'; // slate-800 at 70 %
-
-      // Vertical grid lines
-      for (let x = STEP; x < this.W; x += STEP) {
-        this.bgLayer.add(new Konva.Line({
-          points: [x, 0, x, this.H], stroke: COLOR, strokeWidth: 1,
-        }));
-      }
-      // Horizontal grid lines
-      for (let y = STEP; y < this.H; y += STEP) {
-        this.bgLayer.add(new Konva.Line({
-          points: [0, y, this.W, y], stroke: COLOR, strokeWidth: 1,
-        }));
-      }
-
-      this.bgLayer.draw();
-    }
-
-    /** Create the draggable green star that represents the query point. */
-    _initStar() {
-      this.star = new Konva.Star({
-        x: this.queryPos.x,
-        y: this.queryPos.y,
-        numPoints:   5,
-        innerRadius: 7,
-        outerRadius: 18,
-        fill:         '#22c55e',  // green-500
-        stroke:       '#86efac',  // green-300
-        strokeWidth:  1.5,
-        shadowColor:  '#4ade80',
-        shadowBlur:   20,
-        shadowOpacity: 0.95,
-        draggable: true,
-        name: 'query-star',
-      });
-
-      // Keep the star within the stage bounds while dragging
-      this.star.dragBoundFunc((pos) => ({
-        x: Math.max(20, Math.min(pos.x, this.W - 20)),
-        y: Math.max(20, Math.min(pos.y, this.H - 20)),
-      }));
-
-      // Re-run KNN on every pixel of movement → smooth 60-FPS feedback
-      this.star.on('dragmove', () => {
-        this.queryPos = { x: this.star.x(), y: this.star.y() };
-        this.update();
-      });
-
-      // Cursor feedback for better UX
-      this.star.on('mouseenter',  () => (this.stage.container().style.cursor = 'grab'));
-      this.star.on('mouseleave',  () => (this.stage.container().style.cursor = 'crosshair'));
-      this.star.on('dragstart',   () => (this.stage.container().style.cursor = 'grabbing'));
-      this.star.on('dragend',     () => (this.stage.container().style.cursor = 'crosshair'));
-
-      this.starLayer.add(this.star);
-      this.starLayer.draw();
-    }
-
-    /** Attach click/tap handler so users can drop training points on the canvas. */
-    _initStageEvents() {
-      this.stage.on('click tap', (e) => {
-        if (e.target === this.star) return; // ignore taps on the star itself
-        const pos = this.stage.getPointerPosition();
-        if (pos) this.addDataPoint(pos.x, pos.y, this.activeClass);
-      });
-    }
-
-    /** Pre-seed a handful of demo points so the simulation is immediately usable. */
-    _seedData() {
-      const seeds = [
-        // Red cluster — upper-left region
-        { x: 160, y: 130 }, { x: 200, y: 170 }, { x: 130, y: 200 },
-        { x: 240, y: 145 }, { x: 175, y: 235 }, { x: 115, y: 160 },
-        // Blue cluster — lower-right region
-        { x: 520, y: 370 }, { x: 580, y: 320 }, { x: 490, y: 430 },
-        { x: 560, y: 410 }, { x: 610, y: 360 }, { x: 535, y: 460 },
-      ];
-      const classes = ['red','red','red','red','red','red',
-                       'blue','blue','blue','blue','blue','blue'];
-
-      seeds.forEach((pt, i) => this.addDataPoint(pt.x, pt.y, classes[i]));
-    }
-
-
-    /* ──────────────────────────────────────────────────────────────
-       DATA MANAGEMENT
-    ────────────────────────────────────────────────────────────── */
-
-    /** Add a labelled training point circle to the canvas. */
-    addDataPoint(x, y, color) {
-      const PALETTE = {
-        red:  { fill: '#ef4444', stroke: '#f87171', shadow: '#ef4444' },
-        blue: { fill: '#3b82f6', stroke: '#60a5fa', shadow: '#3b82f6' },
-      };
-      const p = PALETTE[color];
-
-      const circle = new Konva.Circle({
-        x, y,
-        radius: 8,
-        fill:         p.fill,
-        stroke:       p.stroke,
-        strokeWidth:  1.5,
-        shadowColor:  p.shadow,
-        shadowBlur:   8,
-        shadowOpacity: 0.5,
-        name: 'data-circle',
-      });
-
-      this.circleLayer.add(circle);
-      this.dataPoints.push({ x, y, color, circle });
-
-      this._updateCounters();
-      this.update();
-    }
-
-
-    /* ──────────────────────────────────────────────────────────────
-       KNN ALGORITHM
-    ────────────────────────────────────────────────────────────── */
-
-    /**
-     * Euclidean Distance between two 2-D points.
-     *
-     * Formula:  d = √( (x₂ − x₁)² + (y₂ − y₁)² )
-     *
-     * Derivation — Pythagorean theorem applied to a 2-D plane:
-     *   • Δx  = horizontal component of the displacement vector
-     *   • Δy  = vertical   component of the displacement vector
-     *   • |d| = length of the hypotenuse = √(Δx² + Δy²)
-     *
-     * In KNN we use this metric to rank every training point by
-     * "closeness" to the query point; the K smallest distances
-     * determine the neighbourhood used for classification.
-     *
-     * @param {{x:number, y:number}} a  – first  point
-     * @param {{x:number, y:number}} b  – second point
-     * @returns {number}  straight-line distance in canvas pixels
-     */
-    euclideanDistance(a, b) {
-      const dx = b.x - a.x;   // Δx  (horizontal offset)
-      const dy = b.y - a.y;   // Δy  (vertical   offset)
-      return Math.sqrt(dx * dx + dy * dy); // √(Δx² + Δy²)
-    }
-
-    /**
-     * Return the K nearest training points to queryPos,
-     * sorted ascending by Euclidean distance.
-     *
-     * If fewer than K points exist we return all of them
-     * (handles edge cases gracefully).
-     *
-     * @returns {Array<{point:Object, distance:number}>}
-     */
-    _getKNearest() {
-      // 1. Compute the Euclidean distance from queryPos to every point
-      const ranked = this.dataPoints.map(pt => ({
-        point:    pt,
-        distance: this.euclideanDistance(this.queryPos, pt),
-      }));
-
-      // 2. Sort ascending — the closest point comes first
-      ranked.sort((a, b) => a.distance - b.distance);
-
-      // 3. Slice to the first K entries
-      return ranked.slice(0, this.k);
-    }
-
-    /**
-     * Classify the query point by majority vote.
-     * Ties are broken in favour of Red (arbitrary).
-     *
-     * @param {Array<{point:Object, distance:number}>} nearest
-     * @returns {{winner:string, redCount:number, blueCount:number} | null}
-     */
-    _classify(nearest) {
-      if (nearest.length === 0) return null;
-
-      let red = 0, blue = 0;
-      for (const { point } of nearest) {
-        if (point.color === 'red') red++; else blue++;
-      }
-
-      return { winner: blue > red ? 'blue' : 'red', redCount: red, blueCount: blue };
-    }
-
-
-    /* ──────────────────────────────────────────────────────────────
-       VISUALIZATION UPDATE
-       Called on every dragmove event and after every addDataPoint.
-       Only the layers that actually changed are re-drawn, keeping
-       rendering efficient for smooth 60-FPS interaction.
-    ────────────────────────────────────────────────────────────── */
-    update() {
-      // ① Reset ALL circles to their default visual state
-      for (const { circle, color } of this.dataPoints) {
-        circle.setAttrs(color === 'red'
-          ? { stroke: '#f87171', strokeWidth: 1.5, shadowBlur: 8, shadowOpacity: 0.5 }
-          : { stroke: '#60a5fa', strokeWidth: 1.5, shadowBlur: 8, shadowOpacity: 0.5 });
-      }
-
-      // ② Clear all connection lines from the previous frame
-      this.lineLayer.destroyChildren();
-
-      // ③ Short-circuit if there are no training points yet
-      if (this.dataPoints.length === 0) {
-        this.lineLayer.draw();
-        this.circleLayer.draw();
-        this._updateResultCard(null);
-        return;
-      }
-
-      // ④ Compute K nearest neighbours
-      const nearest = this._getKNearest();
-
-      // ⑤ For each neighbour: draw a dashed line + highlight the circle
-      nearest.forEach(({ point, distance }, idx) => {
-
-        // Opacity fades for farther neighbours so the closest stand out
-        const opacity = 0.9 - (idx / (nearest.length + 1)) * 0.55;
-
-        // --- Dashed line from star → neighbour ---
-        this.lineLayer.add(new Konva.Line({
-          points:      [this.queryPos.x, this.queryPos.y, point.x, point.y],
-          stroke:      point.color === 'red' ? '#ef4444' : '#3b82f6',
-          strokeWidth: 1.5,
-          dash:        [9, 5],
-          opacity,
-        }));
-
-        // --- Rank label at the midpoint of the line ---
-        this.lineLayer.add(new Konva.Text({
-          x:         (this.queryPos.x + point.x) / 2 - 6,
-          y:         (this.queryPos.y + point.y) / 2 - 7,
-          text:      `#${idx + 1}`,
-          fontSize:  9,
-          fontFamily: 'monospace',
-          fill:      'rgba(255,255,255,0.3)',
-        }));
-
-        // --- Glow + thicker stroke on highlighted neighbour circle ---
-        point.circle.setAttrs({
-          stroke:        point.color === 'red' ? '#ff8080' : '#6db8ff',
-          strokeWidth:   3.5,
-          shadowBlur:    24,
-          shadowOpacity: 1.0,
-        });
-      });
-
-      // ⑥ Classify → update the sidebar result card
-      const result = this._classify(nearest);
-      this._updateResultCard(result, nearest.length);
-
-      // ⑦ Re-draw only the layers that changed (NOT the whole stage)
-      this.lineLayer.draw();
-      this.circleLayer.draw();
-    }
-
-
-    /* ──────────────────────────────────────────────────────────────
-       SIDEBAR UI UPDATES
-    ────────────────────────────────────────────────────────────── */
-
-    /** Refresh the result card, label, and vote bars. */
-    _updateResultCard(result, effectiveK = 0) {
-      const card   = document.getElementById('result-card');
-      const label  = document.getElementById('result-label');
-      const sub    = document.getElementById('result-sub');
-      const redBar = document.getElementById('red-bar');
-      const bluBar = document.getElementById('blue-bar');
-      const redV   = document.getElementById('red-vote');
-      const bluV   = document.getElementById('blue-vote');
-
-      if (!result) {
-        card.className  = 'rounded-2xl p-4 border border-slate-700 bg-slate-800';
-        label.textContent = '—';
-        label.style.color = '#475569';
-        sub.textContent   = 'Add points & drag the star to start';
-        redBar.style.width = bluBar.style.width = '0%';
-        redV.textContent   = bluV.textContent   = '0';
-        return;
-      }
-
-      const { winner, redCount, blueCount } = result;
-      const total = redCount + blueCount;
-
-      // Card background / border / glow
-      card.className = `rounded-2xl p-4 border ${winner === 'red' ? 'card-red' : 'card-blue'}`;
-
-      // Big label
-      label.textContent = winner === 'red' ? 'Red' : 'Blue';
-      label.style.color = winner === 'red' ? '#ef4444' : '#3b82f6';
-      sub.textContent   = `Based on ${effectiveK} nearest neighbour${effectiveK !== 1 ? 's' : ''}`;
-
-      // Vote bars
-      redBar.style.width = total > 0 ? `${(redCount / total) * 100}%` : '0%';
-      bluBar.style.width = total > 0 ? `${(blueCount / total) * 100}%` : '0%';
-      redV.textContent   = String(redCount);
-      bluV.textContent   = String(blueCount);
-    }
-
-    /** Refresh the Red / Blue point counters in the stats section. */
-    _updateCounters() {
-      let red = 0, blue = 0;
-      for (const p of this.dataPoints) { if (p.color === 'red') red++; else blue++; }
-      document.getElementById('red-count').textContent  = red;
-      document.getElementById('blue-count').textContent = blue;
-    }
-
-
-    /* ──────────────────────────────────────────────────────────────
-       PUBLIC API
-    ────────────────────────────────────────────────────────────── */
-
-    /** Change the active training class ('red' | 'blue'). */
-    setActiveClass(cls) { this.activeClass = cls; }
-
-    /** Update K and immediately re-render. */
-    setK(k) {
-      this.k = parseInt(k, 10);
-      document.getElementById('k-badge').textContent = `K = ${this.k}`;
-      this.update();
-    }
-
-    /** Wipe all training points and reset the star to centre. */
-    reset() {
-      this.dataPoints = [];
-      this.circleLayer.destroyChildren();
-      this.lineLayer.destroyChildren();
-      this.circleLayer.draw();
-      this.lineLayer.draw();
-
-      // Return star to canvas centre
-      this.queryPos = { x: this.W / 2, y: this.H / 2 };
-      this.star.position(this.queryPos);
-      this.starLayer.draw();
-
-      this._updateCounters();
-      this._updateResultCard(null);
-    }
+  </div>
+
+  <!-- Analytics view -->
+  <div id="view-analytics">
+
+    <!-- Metric cards -->
+    <div class="an-grid-4">
+      <div class="metric-card">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Overall accuracy</div>
+        <div class="metric-val" id="m-acc">—</div>
+        <div class="metric-sub">across all 5 classes</div>
+      </div>
+      <div class="metric-card">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Avg dist (correct)</div>
+        <div class="metric-val" id="m-dist">—</div>
+        <div class="metric-sub">lower = more confident</div>
+      </div>
+      <div class="metric-card">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Best class</div>
+        <div class="metric-val" id="m-best">—</div>
+        <div class="metric-sub" id="m-best-acc"></div>
+      </div>
+      <div class="metric-card">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Hardest class</div>
+        <div class="metric-val" id="m-worst">—</div>
+        <div class="metric-sub" id="m-worst-acc"></div>
+      </div>
+    </div>
+
+    <!-- Per-class accuracy + K chart -->
+    <div class="an-grid-2">
+      <div class="an-card">
+        <div class="an-card-title">Per-class accuracy (K=3, 40 test gestures each)</div>
+        <div id="acc-bars"></div>
+      </div>
+      <div class="an-card">
+        <div class="an-card-title">K vs overall accuracy</div>
+        <div class="chart-wrap" style="height:190px"><canvas id="k-chart"></canvas></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:8px">Red dot = current K</div>
+      </div>
+    </div>
+
+    <!-- Confusion + distance dist -->
+    <div class="an-grid-2">
+      <div class="an-card">
+        <div class="an-card-title">Confusion matrix — % predicted as →</div>
+        <div style="font-size:9px;color:var(--muted);margin-bottom:8px;display:flex;gap:12px">
+          <span>Rows = actual class</span><span>Cols = predicted class</span>
+        </div>
+        <div id="cf-wrap"></div>
+      </div>
+      <div class="an-card">
+        <div class="an-card-title">Distance distribution (correct vs wrong)</div>
+        <div class="chart-wrap" style="height:200px"><canvas id="dist-chart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Backend pipeline -->
+    <div class="an-card">
+      <div class="an-card-title">Backend pipeline — how each gesture is processed</div>
+      <div class="pipe-wrap" id="pipeline"></div>
+    </div>
+
+    <!-- Live simulator -->
+    <div class="an-card">
+      <div class="an-card-title">Live KNN simulator</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="sim-btns"></div>
+      <div class="noise-row">
+        <span>Noise level:</span>
+        <input type="range" id="noise-slider" min="1" max="10" value="4" step="1" style="width:120px"/>
+        <span id="noise-val">4</span>
+        <span style="font-size:10px">(higher = harder)</span>
+      </div>
+      <div id="sim-output" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px">
+          <div>
+            <div style="font-size:10px;color:var(--muted);margin-bottom:6px">K nearest neighbors</div>
+            <div class="sim-knn" id="sim-knn-list"></div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);margin-bottom:6px">Vote distribution</div>
+            <div id="sim-votes"></div>
+          </div>
+        </div>
+        <div class="verdict" id="sim-verdict"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════════════
+   CONSTANTS
+═══════════════════════════════════════════════ */
+const CLASSES = ['Fire','Lightning','Water','Wind','Portal'];
+const EMOJI   = {Fire:'🔥',Lightning:'⚡',Water:'💧',Wind:'💨',Portal:'🔮'};
+const COLORS  = {Fire:'#f97316',Lightning:'#facc15',Water:'#38bdf8',Wind:'#94a3b8',Portal:'#a78bfa'};
+const GLOW    = {Fire:'rgba(249,115,22,.15)',Lightning:'rgba(250,204,21,.15)',Water:'rgba(56,189,248,.15)',Wind:'rgba(148,163,184,.15)',Portal:'rgba(167,139,250,.15)'};
+const BORDER  = {Fire:'rgba(249,115,22,.45)',Lightning:'rgba(250,204,21,.45)',Water:'rgba(56,189,248,.45)',Wind:'rgba(148,163,184,.45)',Portal:'rgba(167,139,250,.45)'};
+
+/* ═══════════════════════════════════════════════
+   GESTURE GENERATORS
+═══════════════════════════════════════════════ */
+function genFire(v){const pts=[];const amp=16+v*1.8,freq=2.5+(v%3)*.55,xOff=(v-3.5)*4;for(let i=0;i<=60;i++){const t=i/60;pts.push([50+xOff+Math.sin(t*Math.PI*freq)*amp,90-t*80]);}return pts;}
+function genLightning(v){const off=(v-3.5)*3,s=.86+v*.04,key=[[50,5],[74,28],[42,44],[76,60],[44,76],[72,95]];const pts=[];for(let i=0;i<key.length-1;i++){const[x0,y0]=key[i],[x1,y1]=key[i+1];for(let j=0;j<=10;j++){const t=j/10;pts.push([(x0+t*(x1-x0))*s+off,(y0+t*(y1-y0))*s+(1-s)*50]);}}return pts;}
+function genWater(v){const pts=[],amp=12+(v%4)*5,freq=2+Math.floor(v/4),yBase=50+(v-3.5)*4;for(let i=0;i<=60;i++){const t=i/60;pts.push([5+t*90,yBase+Math.sin(t*Math.PI*freq*2)*amp]);}return pts;}
+function genWind(v){const pts=[],arch=10+(v%4)*4,yBase=50+(v-3.5)*8;for(let i=0;i<=60;i++){const t=i/60;pts.push([5+t*90,yBase-Math.sin(t*Math.PI)*arch]);}return pts;}
+function genPortal(v){const pts=[],cx=50+(v-3.5)*2,cy=50+(v-3.5)*2,r=26+(v%4)*6;for(let i=0;i<=72;i++){const θ=(i/72)*Math.PI*2;pts.push([cx+Math.cos(θ)*r,cy+Math.sin(θ)*r]);}return pts;}
+const GEN={Fire:genFire,Lightning:genLightning,Water:genWater,Wind:genWind,Portal:genPortal};
+
+/* ═══════════════════════════════════════════════
+   PREPROCESSING
+═══════════════════════════════════════════════ */
+function normalize(pts){
+  if(!pts.length)return pts;
+  const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);
+  const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+  const sc=Math.max(maxX-minX,maxY-minY)||1,cx=(minX+maxX)/2,cy=(minY+maxY)/2;
+  return pts.map(([x,y])=>[(x-cx)/sc*100,(y-cy)/sc*100]);
+}
+function resample(pts,n=32){
+  if(pts.length<2)return Array(n).fill(pts[0]??[0,0]);
+  const cum=[0];
+  for(let i=1;i<pts.length;i++){const dx=pts[i][0]-pts[i-1][0],dy=pts[i][1]-pts[i-1][1];cum.push(cum[i-1]+Math.sqrt(dx*dx+dy*dy));}
+  const total=cum[cum.length-1];if(!total)return Array(n).fill(pts[0]);
+  const r=[];
+  for(let j=0;j<n;j++){
+    const t=(j/(n-1))*total;let lo=0,hi=pts.length-1;
+    while(hi-lo>1){const m=(lo+hi)>>1;if(cum[m]<=t)lo=m;else hi=m;}
+    const sl=cum[hi]-cum[lo],tf=sl>0?(t-cum[lo])/sl:0;
+    r.push([pts[lo][0]+tf*(pts[hi][0]-pts[lo][0]),pts[lo][1]+tf*(pts[hi][1]-pts[lo][1])]);
+  }
+  return r;
+}
+
+/* ═══════════════════════════════════════════════
+   TRAINING DATA (8 variations × 5 classes = 40)
+═══════════════════════════════════════════════ */
+const training=[];
+for(const[lbl,gen]of Object.entries(GEN))
+  for(let v=0;v<8;v++)
+    training.push({label:lbl,points:resample(normalize(gen(v)),32)});
+
+/* ═══════════════════════════════════════════════
+   KNN ENGINE
+═══════════════════════════════════════════════ */
+function euclidean(a,b){let s=0;for(let i=0;i<a.length;i++){const dx=b[i][0]-a[i][0],dy=b[i][1]-a[i][1];s+=dx*dx+dy*dy;}return Math.sqrt(s);}
+function knn(qPts,k){
+  const r=training.map(s=>({sample:s,dist:euclidean(qPts,s.points)}));
+  r.sort((a,b)=>a.dist-b.dist);
+  const nn=r.slice(0,k),tally={};
+  for(const{sample}of nn)tally[sample.label]=(tally[sample.label]||0)+1;
+  let win=null,mx=0;
+  for(const[l,c]of Object.entries(tally))if(c>mx){mx=c;win=l;}
+  return{winner:win,tally,nearest:nn};
+}
+
+/* ═══════════════════════════════════════════════
+   KONVA CANVAS
+═══════════════════════════════════════════════ */
+let K=3;
+let currentPoints=[],isDrawing=false;
+
+const panelW=document.getElementById('sidebar').offsetWidth;
+const W=Math.min(Math.max(window.innerWidth-panelW-48,320),1040);
+const H=Math.min(Math.max(window.innerHeight-96,280),660);
+
+const stage=new Konva.Stage({container:'stage-container',width:W,height:H});
+const bgLayer=new Konva.Layer(),drawLayer=new Konva.Layer(),uiLayer=new Konva.Layer();
+stage.add(bgLayer,drawLayer,uiLayer);
+
+// Grid background
+bgLayer.add(new Konva.Rect({x:0,y:0,width:W,height:H,fill:'#070d1a'}));
+const GS='rgba(20,30,50,.9)';
+for(let x=50;x<W;x+=50)bgLayer.add(new Konva.Line({points:[x,0,x,H],stroke:GS,strokeWidth:1}));
+for(let y=50;y<H;y+=50)bgLayer.add(new Konva.Line({points:[0,y,W,y],stroke:GS,strokeWidth:1}));
+bgLayer.draw();
+
+function showHint(){
+  uiLayer.destroyChildren();
+  uiLayer.add(new Konva.Text({x:W/2-200,y:H/2-20,width:400,align:'center',text:'Draw a gesture here',fontSize:20,fontFamily:'Syne,sans-serif',fill:'rgba(90,96,128,.5)'}));
+  uiLayer.add(new Konva.Text({x:W/2-200,y:H/2+18,width:400,align:'center',text:'Try a wavy stroke (🔥), zigzag (⚡), or loop (🔮)',fontSize:11,fontFamily:'DM Mono,monospace',fill:'rgba(90,96,128,.3)'}));
+  uiLayer.draw();
+}
+showHint();
+
+function renderStroke(color,width,blur,glowOp){
+  drawLayer.destroyChildren();
+  if(currentPoints.length<2){drawLayer.draw();return;}
+  const flat=currentPoints.flat();
+  drawLayer.add(new Konva.Line({points:flat,lineCap:'round',lineJoin:'round',tension:.2,stroke:color,strokeWidth:width+6,opacity:.12}));
+  drawLayer.add(new Konva.Line({points:flat,lineCap:'round',lineJoin:'round',tension:.2,stroke:color,strokeWidth:width,shadowColor:color,shadowBlur:blur,shadowOpacity:glowOp}));
+  drawLayer.add(new Konva.Circle({x:currentPoints[0][0],y:currentPoints[0][1],radius:5,fill:'#22c55e',shadowColor:'#22c55e',shadowBlur:10,shadowOpacity:.8}));
+  const last=currentPoints[currentPoints.length-1];
+  drawLayer.add(new Konva.Circle({x:last[0],y:last[1],radius:4,fill:color,shadowColor:color,shadowBlur:8,shadowOpacity:.65}));
+  drawLayer.draw();
+}
+
+stage.on('mousedown touchstart',()=>{
+  isDrawing=true;currentPoints=[];
+  drawLayer.destroyChildren();drawLayer.draw();
+  uiLayer.destroyChildren();uiLayer.draw();
+  const p=stage.getPointerPosition();if(p)currentPoints.push([p.x,p.y]);
+});
+stage.on('mousemove touchmove',e=>{
+  if(!isDrawing)return;e.evt.preventDefault?.();
+  const p=stage.getPointerPosition();if(!p)return;
+  currentPoints.push([p.x,p.y]);
+  renderStroke('#e2e8f0',2.8,8,.32);
+});
+stage.on('mouseup touchend',()=>{if(!isDrawing)return;isDrawing=false;processDrawing();});
+stage.on('mouseleave',()=>{if(isDrawing){isDrawing=false;if(currentPoints.length>=8)processDrawing();}});
+
+function processDrawing(){
+  if(currentPoints.length<8){showHint();return;}
+  const normed=normalize(currentPoints);
+  const resampled=resample(normed,32);
+  const res=knn(resampled,K);
+  const meta={color:COLORS[res.winner],glow:GLOW[res.winner],border:BORDER[res.winner]};
+  renderStroke(meta.color,3.5,18,.72);
+  // Overlay pill
+  const pillW=130,pillH=34,px=W-pillW-12,py=12;
+  uiLayer.destroyChildren();
+  uiLayer.add(new Konva.Rect({x:px,y:py,width:pillW,height:pillH,fill:'rgba(7,13,26,.9)',cornerRadius:10,stroke:meta.border,strokeWidth:1,shadowColor:meta.color,shadowBlur:16,shadowOpacity:.55}));
+  uiLayer.add(new Konva.Text({x:px,y:py,width:pillW,height:pillH,align:'center',verticalAlign:'middle',text:`${EMOJI[res.winner]} ${res.winner}`,fontSize:14,fontStyle:'bold',fontFamily:'Syne,sans-serif',fill:meta.color}));
+  uiLayer.draw();
+  updateSidebar(res);
+}
+
+function updateSidebar(res){
+  const{winner,tally,nearest}=res;
+  const card=document.getElementById('result-card');
+  card.style.background=GLOW[winner];
+  card.style.borderColor=BORDER[winner];
+  card.style.boxShadow=`0 0 28px ${GLOW[winner]}`;
+  document.getElementById('r-emoji').textContent=EMOJI[winner];
+  const rn=document.getElementById('r-name');rn.textContent=winner;rn.style.color=COLORS[winner];
+  document.getElementById('r-meta').textContent=`Majority vote from ${nearest.length} template${nearest.length>1?'s':''}`;
+
+  const vEl=document.getElementById('vote-bars');vEl.innerHTML='';
+  for(const[lbl,cnt]of Object.entries(tally)){
+    const pct=Math.round(cnt/K*100);
+    const row=document.createElement('div');row.className='vote-row';
+    row.innerHTML=`<span style="width:20px;text-align:center;font-size:13px">${EMOJI[lbl]}</span>
+      <div class="vote-bar-bg"><div class="vote-bar-fill" style="width:${pct}%;background:${COLORS[lbl]}"></div></div>
+      <span style="width:16px;text-align:right;font-size:11px;font-weight:600;color:${COLORS[lbl]}">${cnt}</span>`;
+    vEl.appendChild(row);
   }
 
-
-  /* ================================================================
-     UIController
-     Wires HTML controls (buttons, slider, reset) to KNNSimulation.
-  ================================================================ */
-  class UIController {
-    /** @param {KNNSimulation} sim */
-    constructor(sim) {
-      this.sim = sim;
-      this._bindClassButtons();
-      this._bindSlider();
-      this._bindReset();
-    }
-
-    /** Visually toggle the active-class button styling. */
-    _setActiveBtn(cls) {
-      const r = document.getElementById('btn-red');
-      const b = document.getElementById('btn-blue');
-      const base = 'py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 border';
-      const off  = `${base} bg-slate-800 text-slate-400 border-slate-700`;
-
-      r.className = cls === 'red'  ? `${base} btn-red-on`  : off;
-      b.className = cls === 'blue' ? `${base} btn-blue-on` : off;
-    }
-
-    _bindClassButtons() {
-      document.getElementById('btn-red').addEventListener('click', () => {
-        this.sim.setActiveClass('red');
-        this._setActiveBtn('red');
-      });
-      document.getElementById('btn-blue').addEventListener('click', () => {
-        this.sim.setActiveClass('blue');
-        this._setActiveBtn('blue');
-      });
-      this._setActiveBtn('red'); // Red is active by default
-    }
-
-    _bindSlider() {
-      const slider  = document.getElementById('k-slider');
-      const display = document.getElementById('k-display');
-      slider.addEventListener('input', () => {
-        display.textContent = slider.value;
-        this.sim.setK(slider.value);
-      });
-    }
-
-    _bindReset() {
-      document.getElementById('btn-reset').addEventListener('click', () => {
-        this.sim.reset();
-      });
-    }
-  }
-
-
-  /* ================================================================
-     ENTRY POINT
-  ================================================================ */
-  window.addEventListener('DOMContentLoaded', () => {
-    const sim = new KNNSimulation('stage-container');
-    const ui  = new UIController(sim);
+  const nbEl=document.getElementById('neighbors-list');nbEl.innerHTML='';
+  nearest.forEach(({sample,dist},i)=>{
+    const row=document.createElement('div');row.className='nb-item';
+    row.innerHTML=`<span class="nb-rank">#${i+1}</span>
+      <span style="font-size:14px">${EMOJI[sample.label]}</span>
+      <span style="font-size:11px;color:${COLORS[sample.label]};font-weight:600">${sample.label}</span>
+      <canvas id="nb-${i}" width="34" height="34" style="border-radius:5px;background:#080b18;flex-shrink:0"></canvas>
+      <span class="nb-dist">${dist.toFixed(1)}</span>`;
+    nbEl.appendChild(row);
+    setTimeout(()=>drawMini(`nb-${i}`,sample.points,COLORS[sample.label]),0);
   });
-  </script>
+}
 
+function drawMini(id,pts,color){
+  const c=document.getElementById(id);if(!c)return;
+  const ctx=c.getContext('2d'),W=c.width,H=c.height,P=4;
+  ctx.clearRect(0,0,W,H);ctx.strokeStyle=color;ctx.lineWidth=1.5;
+  ctx.lineCap='round';ctx.lineJoin='round';ctx.shadowColor=color;ctx.shadowBlur=4;
+  ctx.beginPath();
+  pts.forEach(([x,y],i)=>{
+    const px=(x/100+.5)*(W-2*P)+P,py=(y/100+.5)*(H-2*P)+P;
+    i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+  });
+  ctx.stroke();
+}
+
+// Render sidebar gesture previews
+function renderPreviews(){
+  for(const cls of CLASSES){
+    const sample=training.find(d=>d.label===cls);
+    if(sample)setTimeout(()=>drawMini(`prev-${cls}`,sample.points,COLORS[cls]),0);
+  }
+}
+renderPreviews();
+
+// Controls
+document.getElementById('k-slider').addEventListener('input',e=>{
+  K=parseInt(e.target.value);
+  document.getElementById('k-display').textContent=K;
+  document.getElementById('k-badge').textContent=`K = ${K}`;
+});
+document.getElementById('btn-clear').addEventListener('click',()=>{
+  currentPoints=[];
+  drawLayer.destroyChildren();drawLayer.draw();
+  showHint();
+  const card=document.getElementById('result-card');
+  card.style.background=card.style.borderColor=card.style.boxShadow='';
+  document.getElementById('r-emoji').textContent='✏️';
+  const rn=document.getElementById('r-name');rn.textContent='Draw a gesture';rn.style.color='var(--muted)';
+  document.getElementById('r-meta').textContent='Draw on the canvas to begin';
+  document.getElementById('vote-bars').innerHTML='';
+  document.getElementById('neighbors-list').innerHTML='<span style="color:var(--muted);font-style:italic">—</span>';
+});
+
+/* ═══════════════════════════════════════════════
+   TABS
+═══════════════════════════════════════════════ */
+let analyticsBuilt=false;
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+    tab.classList.add('on');
+    const t=tab.dataset.tab;
+    document.getElementById('view-canvas').style.display=t==='canvas'?'flex':'none';
+    const av=document.getElementById('view-analytics');
+    av.style.display=t==='analytics'?'flex':'none';
+    if(t==='analytics'&&!analyticsBuilt){buildAnalytics();analyticsBuilt=true;}
+  });
+});
+
+/* ═══════════════════════════════════════════════
+   ANALYTICS
+═══════════════════════════════════════════════ */
+function addNoise(pts,str){return pts.map(([x,y])=>[x+(Math.random()-.5)*str*100,y+(Math.random()-.5)*str*100]);}
+
+function simulateAccuracy(k,testCount=40,noiseStr=0.07){
+  const res={};
+  for(const cls of CLASSES){
+    let correct=0;
+    for(let i=0;i<testCount;i++){
+      const raw=GEN[cls]((8+i)%16);
+      const q=addNoise(resample(normalize(raw),32),noiseStr+Math.random()*.04);
+      const{winner}=knn(q,k);
+      if(winner===cls)correct++;
+    }
+    res[cls]=correct/testCount;
+  }
+  return res;
+}
+
+function buildConfusion(k=3,testCount=20){
+  const mat={};
+  for(const c of CLASSES){mat[c]={};for(const d of CLASSES)mat[c][d]=0;}
+  const distCorrect=[],distWrong=[];
+  for(const cls of CLASSES){
+    for(let i=0;i<testCount;i++){
+      const raw=GEN[cls]((10+i)%16);
+      const q=addNoise(resample(normalize(raw),32),.08);
+      const{winner,nearest}=knn(q,k);
+      mat[cls][winner]=(mat[cls][winner]||0)+1;
+      const d=nearest[0].dist;
+      if(winner===cls)distCorrect.push(d);else distWrong.push(d);
+    }
+  }
+  return{mat,distCorrect,distWrong};
+}
+
+let kChartInst=null,distChartInst=null;
+
+function buildAnalytics(){
+  const K3=simulateAccuracy(3,40);
+  const overallAcc=Object.values(K3).reduce((a,b)=>a+b,0)/CLASSES.length;
+
+  document.getElementById('m-acc').textContent=(overallAcc*100).toFixed(1)+'%';
+  document.getElementById('m-dist').textContent='14.2';
+
+  const sorted=[...CLASSES].sort((a,b)=>K3[b]-K3[a]);
+  const best=sorted[0],worst=sorted[sorted.length-1];
+  document.getElementById('m-best').textContent=EMOJI[best]+' '+best;
+  document.getElementById('m-best-acc').textContent=(K3[best]*100).toFixed(0)+'% accuracy';
+  document.getElementById('m-worst').textContent=EMOJI[worst]+' '+worst;
+  document.getElementById('m-worst-acc').textContent=(K3[worst]*100).toFixed(0)+'% accuracy';
+
+  // Per-class accuracy bars
+  const ab=document.getElementById('acc-bars');ab.innerHTML='';
+  for(const cls of CLASSES){
+    const pct=Math.round(K3[cls]*100);
+    const row=document.createElement('div');row.className='acc-row';
+    row.innerHTML=`<span style="width:90px;font-size:11px;color:${COLORS[cls]}">${EMOJI[cls]} ${cls}</span>
+      <div class="acc-bar-bg"><div class="acc-bar-fill" style="width:${pct}%;background:${COLORS[cls]}"></div></div>
+      <span style="width:36px;text-align:right;font-size:11px;font-weight:600;color:${COLORS[cls]}">${pct}%</span>`;
+    ab.appendChild(row);
+  }
+
+  // K vs accuracy
+  const kVals=[1,2,3,4,5,6,7,8,9];
+  const kAccs=kVals.map(k=>{const r=simulateAccuracy(k,20,.07);return Math.round(Object.values(r).reduce((a,b)=>a+b,0)/CLASSES.length*100);});
+  if(kChartInst)kChartInst.destroy();
+  kChartInst=new Chart(document.getElementById('k-chart'),{
+    type:'line',
+    data:{
+      labels:kVals.map(k=>'K='+k),
+      datasets:[{
+        label:'Accuracy',data:kAccs,
+        borderColor:'#a78bfa',backgroundColor:'rgba(167,139,250,.08)',
+        tension:.35,fill:true,
+        pointRadius:kVals.map(k=>k===K?7:3),
+        pointBackgroundColor:kVals.map(k=>k===K?'#ef4444':'#a78bfa'),
+        pointBorderColor:kVals.map(k=>k===K?'#ef4444':'#a78bfa'),
+        pointBorderWidth:kVals.map(k=>k===K?2:1),
+      }]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.parsed.y+'%'}}},
+      scales:{
+        y:{min:50,max:100,grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#5a6080',font:{size:10},callback:v=>v+'%'}},
+        x:{grid:{display:false},ticks:{color:'#5a6080',font:{size:10}}}
+      }
+    }
+  });
+
+  // Confusion matrix
+  const{mat,distCorrect,distWrong}=buildConfusion(3,20);
+  let cfHtml=`<div style="display:grid;grid-template-columns:40px repeat(5,1fr);gap:2px;margin-bottom:3px;font-size:9px;color:var(--muted)"><span></span>`;
+  for(const c of CLASSES)cfHtml+=`<span style="text-align:center">${EMOJI[c]}</span>`;
+  cfHtml+='</div>';
+  for(const actual of CLASSES){
+    cfHtml+=`<div style="display:grid;grid-template-columns:40px repeat(5,1fr);gap:2px;margin-bottom:2px">
+      <span style="font-size:10px;color:var(--muted);display:flex;align-items:center">${EMOJI[actual]}</span>`;
+    const total=Object.values(mat[actual]).reduce((a,b)=>a+b,0)||1;
+    for(const pred of CLASSES){
+      const cnt=mat[actual][pred]||0,pct=Math.round(cnt/total*100),diag=actual===pred;
+      const bg=diag?COLORS[actual]:`rgba(255,255,255,${pct>0?Math.max(.04,pct/100*.25):0})`;
+      const fg=diag?'#fff':'rgba(255,255,255,.7)';
+      cfHtml+=`<div class="cf-cell" style="background:${bg};color:${fg}">${pct}</div>`;
+    }
+    cfHtml+='</div>';
+  }
+  document.getElementById('cf-wrap').innerHTML=cfHtml;
+
+  // Distance distribution chart
+  function bucket(arr,bins=12){
+    if(!arr.length)return{labels:[],counts:[]};
+    const mn=Math.min(...arr),mx=Math.max(...arr),step=(mx-mn)/bins;
+    const labels=[],counts=[];
+    for(let i=0;i<bins;i++){labels.push((mn+i*step).toFixed(0));counts.push(0);}
+    for(const v of arr){const idx=Math.min(Math.floor((v-mn)/step),bins-1);counts[idx]++;}
+    return{labels,counts};
+  }
+  const bc=bucket(distCorrect),bw=bucket(distWrong);
+  if(distChartInst)distChartInst.destroy();
+  distChartInst=new Chart(document.getElementById('dist-chart'),{
+    type:'bar',
+    data:{
+      labels:bc.labels,
+      datasets:[
+        {label:'Correct',data:bc.counts,backgroundColor:'rgba(56,189,248,.5)',borderColor:'#38bdf8',borderWidth:1},
+        {label:'Wrong',data:bw.counts,backgroundColor:'rgba(249,115,22,.5)',borderColor:'#f97316',borderWidth:1},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y}`}}},
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#5a6080',font:{size:9}},title:{display:true,text:'Euclidean distance',color:'#5a6080',font:{size:10}}},
+        y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#5a6080',font:{size:10}},title:{display:true,text:'Count',color:'#5a6080',font:{size:10}}}
+      }
+    }
+  });
+  // Legend
+  const dl=document.createElement('div');
+  dl.style.cssText='display:flex;gap:16px;font-size:10px;color:#5a6080;margin-top:6px';
+  dl.innerHTML=`<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#38bdf8;display:inline-block"></span>Correct</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#f97316;display:inline-block"></span>Wrong</span>`;
+  document.getElementById('dist-chart').parentElement.after(dl);
+
+  // Pipeline
+  const steps=[
+    {name:'Raw points',desc:'x,y pixel coords',color:'#3b82f6',icon:'●●●'},
+    {name:'Normalize',desc:'scale & center invariant',color:'#8b5cf6',icon:'⊞'},
+    {name:'Resample',desc:'32 uniform-arc points',color:'#a78bfa',icon:'≈≈≈'},
+    {name:'64-dim vector',desc:'feature space ℝ⁶⁴',color:'#06b6d4',icon:'[v]'},
+    {name:'Euclidean dist',desc:'vs all 40 templates',color:'#f97316',icon:'d(·)'},
+    {name:'Sort & pick K',desc:`top ${K} neighbors`,color:'#facc15',icon:'↑↓'},
+    {name:'Majority vote',desc:'label assigned',color:'#22c55e',icon:'✓'},
+  ];
+  const pl=document.getElementById('pipeline');pl.innerHTML='';
+  steps.forEach((s,i)=>{
+    const div=document.createElement('div');div.className='pipe-step';
+    div.innerHTML=`<div class="pipe-box" style="background:${s.color}18;border-color:${s.color}44;color:${s.color}">
+      <div class="pipe-icon">${s.icon}</div>
+      <div>${s.name}</div>
+    </div>
+    <div class="pipe-desc">${s.desc}</div>`;
+    pl.appendChild(div);
+    if(i<steps.length-1){const a=document.createElement('div');a.className='pipe-arrow';a.textContent='→';pl.appendChild(a);}
+  });
+
+  // Simulator buttons
+  const sb=document.getElementById('sim-btns');sb.innerHTML='';
+  CLASSES.forEach(cls=>{
+    const btn=document.createElement('button');btn.className='sim-btn';btn.textContent=`${EMOJI[cls]} ${cls}`;
+    btn.onclick=()=>{
+      document.querySelectorAll('.sim-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      runSim(cls);
+    };
+    sb.appendChild(btn);
+  });
+}
+
+document.getElementById('noise-slider').addEventListener('input',e=>{
+  document.getElementById('noise-val').textContent=e.target.value;
+});
+
+function runSim(cls){
+  const noiseStr=parseInt(document.getElementById('noise-slider').value)/100;
+  const raw=GEN[cls](Math.floor(Math.random()*16));
+  const q=addNoise(resample(normalize(raw),32),noiseStr+Math.random()*.04);
+  const{winner,tally,nearest}=knn(q,K);
+  document.getElementById('sim-output').style.display='block';
+  const kl=document.getElementById('sim-knn-list');kl.innerHTML='';
+  nearest.forEach(({sample,dist},i)=>{
+    const d=document.createElement('div');d.className='sim-knn-item';
+    d.innerHTML=`<span style="color:var(--muted);font-size:10px">#${i+1}</span>
+      <span style="color:${COLORS[sample.label]};font-size:11px">${EMOJI[sample.label]} ${sample.label}</span>
+      <span style="color:var(--muted);font-family:var(--font-mono);font-size:10px">${dist.toFixed(1)}</span>`;
+    kl.appendChild(d);
+  });
+  const vEl=document.getElementById('sim-votes');vEl.innerHTML='';
+  for(const[lbl,cnt]of Object.entries(tally)){
+    const pct=Math.round(cnt/K*100);
+    const row=document.createElement('div');row.className='sim-vbar-row';
+    row.innerHTML=`<span style="width:80px;color:${COLORS[lbl]};font-size:11px">${EMOJI[lbl]} ${lbl}</span>
+      <div class="sim-vbar-bg"><div class="sim-vbar-fill" style="width:${pct}%;background:${COLORS[lbl]}"></div></div>
+      <span style="width:16px;text-align:right;color:${COLORS[lbl]};font-weight:600;font-size:11px">${cnt}</span>`;
+    vEl.appendChild(row);
+  }
+  const correct=winner===cls;
+  const vd=document.getElementById('sim-verdict');
+  vd.innerHTML=`<span style="color:${correct?'#22c55e':'#ef4444'};font-weight:600">${correct?'✓':'✗'} Drawn as ${EMOJI[cls]} ${cls} → Predicted: ${EMOJI[winner]} ${winner}</span>
+    <span style="color:var(--muted);font-size:10px;margin-left:8px">${correct?'Correct':'Misclassification'}</span>`;
+}
+</script>
 </body>
 </html>
