@@ -1,932 +1,384 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
-<title>Gesture KNN</title>
-<script src="https://unpkg.com/konva@9/konva.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KNN Shape Classifier</title>
 <style>
-/* ╔══════════════════════════════════════════════════════════════╗
-   ║  DESIGN TOKENS                                               ║
-   ╚══════════════════════════════════════════════════════════════╝ */
-:root{
-  --bg:#05070f; --surface:#0c0f1e; --s2:#12172b; --s3:#181e30;
-  --b1:rgba(255,255,255,.06); --b2:rgba(255,255,255,.13); --b3:rgba(255,255,255,.22);
-  --text:#e8eaf0; --muted:#5a6080; --dim:#2e3450;
-  --accent:#a78bfa; --accent-bg:rgba(167,139,250,.12);
-  --fire:#f97316; --lightning:#facc15; --water:#38bdf8; --wind:#94a3b8; --portal:#a78bfa;
-  --fd:'Syne',sans-serif; --fm:'DM Mono',monospace;
-  --r:10px; --rl:14px; --rxl:18px;
-  --sb-w:272px; --tab-h:44px;
-  --sp-xs:6px; --sp-sm:10px; --sp-md:14px; --sp-lg:20px; --sp-xl:26px;
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #fff;
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px 40px;
+  gap: 14px;
 }
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--fm);-webkit-font-smoothing:antialiased;text-size-adjust:100%}
-::selection{background:rgba(167,139,250,.25)}
-::-webkit-scrollbar{width:3px;height:3px}
-::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px}
-button{font-family:var(--fm)}
-
-/* ╔═══════════════════╗
-   ║  APP SHELL        ║
-   ╚═══════════════════╝ */
-#app{display:flex;height:100dvh;overflow:hidden;position:relative}
-
-/* ╔═══════════════════╗
-   ║  SIDEBAR          ║
-   ╚═══════════════════╝ */
-#sidebar{
-  width:var(--sb-w);flex-shrink:0;height:100dvh;
-  background:var(--surface);border-right:1px solid var(--b1);
-  display:flex;flex-direction:column;overflow:hidden;
-  transition:transform .26s cubic-bezier(.4,0,.2,1);
-  will-change:transform;z-index:200;
+canvas { display: block; }
+#draw { border: 1.5px solid #111; cursor: crosshair; }
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+button {
+  padding: 8px 22px;
+  font-size: 14px;
+  border: 1.5px solid #111;
+  background: #fff;
+  cursor: pointer;
+  border-radius: 4px;
 }
-#sb-body{flex:1;overflow-y:auto;padding:var(--sp-md) var(--sp-md) 0;overscroll-behavior:contain}
-.sb-sec{margin-bottom:var(--sp-lg)}
-.sb-lbl{font-size:9px;color:var(--muted);letter-spacing:.13em;text-transform:uppercase;margin-bottom:9px;font-family:var(--fd)}
-.sb-hd{padding:var(--sp-md);border-bottom:1px solid var(--b1);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:8px}
-.sb-logo{font-family:var(--fd);font-weight:800;font-size:18px;letter-spacing:-.4px;line-height:1.1}
-.sb-logo span{color:var(--accent)}
-.sb-sub{font-size:9px;color:var(--muted);margin-top:2px;letter-spacing:.07em;text-transform:uppercase}
-#sb-close{display:none;background:none;border:1px solid var(--b2);color:var(--muted);cursor:pointer;padding:4px 8px;border-radius:6px;font-size:14px;line-height:1;flex-shrink:0}
-.g-card{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:8px;border:1px solid var(--b1);background:var(--s2);margin-bottom:5px;transition:border-color .15s}
-.g-card canvas{border-radius:5px;background:#080b18;flex-shrink:0}
-.g-card .nm{font-family:var(--fd);font-weight:700;font-size:12px}
-.g-card .ht{font-size:10px;color:var(--muted);margin-top:1px}
-.k-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
-.k-val{font-family:var(--fd);font-weight:800;font-size:22px;color:var(--accent)}
-input[type=range]{-webkit-appearance:none;appearance:none;width:100%;background:transparent;cursor:pointer}
-input[type=range]::-webkit-slider-track{background:var(--s2);height:4px;border-radius:2px;border:1px solid var(--b2)}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;background:var(--accent);border-radius:50%;border:2px solid rgba(167,139,250,.35);margin-top:-6px}
-input[type=range]::-moz-range-track{background:var(--s2);height:4px;border-radius:2px}
-input[type=range]::-moz-range-thumb{width:16px;height:16px;background:var(--accent);border-radius:50%;border:2px solid rgba(167,139,250,.35)}
-.k-hints{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-top:5px}
-.r-card{border-radius:var(--r);padding:13px;border:1px solid var(--b1);background:var(--s2);transition:border-color .3s,background .3s,box-shadow .3s}
-.r-name{font-family:var(--fd);font-weight:800;font-size:18px;color:var(--muted);transition:color .3s;letter-spacing:-.4px}
-.r-meta{font-size:10px;color:var(--muted);margin-top:3px}
-.vrow{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:11px}
-.vbg{flex:1;height:3px;background:var(--dim);border-radius:2px;overflow:hidden}
-.vfill{height:100%;border-radius:2px;transition:width .35s cubic-bezier(.4,0,.2,1)}
-.nb-item{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--b1);font-size:11px}
-.nb-rank{color:var(--dim);width:18px;font-size:10px}
-.sb-ft{padding:var(--sp-sm) var(--sp-md);border-top:1px solid var(--b1);flex-shrink:0}
-.btn-clear{width:100%;padding:9px;border:1px solid var(--b1);border-radius:8px;background:transparent;color:var(--muted);font-size:11px;cursor:pointer;letter-spacing:.06em;transition:background .15s,color .15s,border-color .15s;display:flex;align-items:center;justify-content:center;gap:7px}
-.btn-clear:hover{background:var(--s2);color:var(--text);border-color:var(--b2)}
-
-/* ╔═══════════════════╗
-   ║  MAIN + TABS      ║
-   ╚═══════════════════╝ */
-#main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
-#topbar{display:flex;align-items:center;border-bottom:1px solid var(--b1);flex-shrink:0;padding:0 var(--sp-md);background:var(--surface);height:var(--tab-h);gap:4px}
-#menu-btn{display:none;background:none;border:none;color:var(--muted);cursor:pointer;padding:0;font-size:20px;line-height:1;flex-shrink:0;margin-right:4px}
-.tab{padding:0 var(--sp-md);font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;height:100%;display:flex;align-items:center;transition:color .15s,border-color .15s;font-family:var(--fd);font-weight:600;white-space:nowrap;user-select:none}
-.tab.on{color:var(--accent);border-bottom-color:var(--accent)}
-.tab:hover:not(.on){color:var(--text)}
-
-/* ╔═══════════════════╗
-   ║  CANVAS VIEW      ║
-   ╚═══════════════════╝ */
-#view-canvas{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;padding:var(--sp-md);gap:var(--sp-sm)}
-#canvas-area{position:relative;flex-shrink:0;display:flex}
-#hint-bar{font-size:11px;color:var(--muted);letter-spacing:.05em;display:flex;align-items:center;gap:var(--sp-sm);flex-wrap:wrap;justify-content:center;flex-shrink:0}
-#k-badge{background:var(--accent-bg);border:1px solid rgba(167,139,250,.25);color:var(--accent);font-size:10px;padding:2px 10px;border-radius:20px;font-family:var(--fd);font-weight:700;white-space:nowrap}
-#stage-wrap{border-radius:var(--rl);overflow:hidden;box-shadow:0 0 0 1px rgba(167,139,250,.07),0 0 50px rgba(100,60,200,.09),0 16px 60px rgba(0,0,0,.75)}
-.konvajs-content{cursor:crosshair!important}
-#stage-container{touch-action:none;display:block}
-
-/* ╔═════════════════════════════════════════════════════════╗
-   ║  LIVE ACCURACY OVERLAY                                  ║
-   ║  Appears bottom-right of canvas after every draw.       ║
-   ╚═════════════════════════════════════════════════════════╝ */
-#acc-overlay{
-  position:absolute;
-  bottom:12px; right:12px;
-  background:rgba(5,7,15,.96);
-  border:1px solid var(--b2);
-  border-radius:var(--rl);
-  padding:14px 16px 12px;
-  min-width:235px; max-width:min(320px,calc(100% - 20px));
-  z-index:30;pointer-events:none;
-  opacity:0;
-  transform:translateY(8px);
-  transition:opacity .24s ease,transform .24s ease;
-  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
-}
-#acc-overlay.visible{opacity:1;transform:translateY(0)}
-
-/* Header */
-.ov-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}
-.ov-tag{font-size:9px;color:var(--muted);letter-spacing:.11em;text-transform:uppercase;font-family:var(--fd);margin-bottom:3px}
-.ov-winner{font-family:var(--fd);font-weight:800;font-size:17px;letter-spacing:-.3px;line-height:1.1}
-/* Confidence ring */
-.ov-ring{position:relative;width:46px;height:46px;flex-shrink:0}
-.ov-ring svg{transform:rotate(-90deg);overflow:visible}
-.ov-ring-val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:10px;font-weight:700}
-.ov-conf-tag{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.09em;margin-top:2px;text-align:center}
-/* Probability bars */
-.ov-bars{display:flex;flex-direction:column;gap:4px;margin-bottom:11px}
-.ov-row{display:flex;align-items:center;gap:7px}
-.ov-cls{font-size:10px;width:72px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ov-cls.w{font-weight:700}
-.ov-bg{flex:1;height:5px;background:rgba(255,255,255,.04);border-radius:3px;overflow:hidden;border:1px solid rgba(255,255,255,.06)}
-.ov-fill{height:100%;border-radius:3px;transition:width .45s cubic-bezier(.4,0,.2,1)}
-.ov-pct{width:30px;text-align:right;font-weight:700;font-size:10px;font-family:var(--fd)}
-/* Stats row */
-.ov-stats{border-top:1px solid var(--b1);padding-top:8px;display:flex;gap:12px;flex-wrap:wrap}
-.ov-stat{font-size:9px;color:var(--muted);white-space:nowrap}
-.ov-stat b{color:rgba(232,234,240,.8);font-weight:600}
-
-/* ╔═══════════════════╗
-   ║  ANALYTICS VIEW   ║
-   ╚═══════════════════╝ */
-#view-analytics{flex:1;overflow-y:auto;padding:var(--sp-lg);display:none;flex-direction:column;gap:var(--sp-md);overscroll-behavior:contain}
-.an-g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--sp-sm)}
-.an-g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--sp-md)}
-.an-card{background:var(--surface);border:1px solid var(--b1);border-radius:var(--rl);padding:var(--sp-md)}
-.an-ttl{font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;font-family:var(--fd)}
-.m-card{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:12px}
-.m-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
-.m-val{font-family:var(--fd);font-weight:800;font-size:22px;letter-spacing:-.4px}
-.m-sub{font-size:10px;color:var(--muted);margin-top:3px}
-.chart-wrap{position:relative}
-.a-acc-row{display:flex;align-items:center;gap:9px;margin-bottom:7px;font-size:11px}
-.a-acc-bg{flex:1;height:6px;background:var(--s2);border-radius:3px;border:1px solid var(--b1);overflow:hidden}
-.a-acc-fill{height:100%;border-radius:3px;transition:width .5s cubic-bezier(.4,0,.2,1)}
-.cf-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:4px;font-size:11px;font-weight:700;font-family:var(--fd)}
-.pipe-wrap{display:flex;align-items:flex-start;overflow-x:auto;padding:4px 0 6px}
-.pipe-step{display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;min-width:80px}
-.pipe-box{width:100%;padding:9px 6px;border-radius:7px;border:1px solid;font-size:10px;text-align:center;font-family:var(--fd);font-weight:700}
-.pipe-ico{font-size:14px;margin-bottom:2px}
-.pipe-desc{font-size:9px;color:var(--muted);text-align:center;max-width:84px}
-.pipe-arr{color:var(--dim);font-size:15px;padding:0 2px;flex-shrink:0;margin-top:12px;align-self:flex-start}
-.sim-btn{flex:1;min-width:70px;padding:7px 5px;font-size:11px;border-radius:7px;border:1px solid var(--b1);background:transparent;cursor:pointer;color:var(--text);transition:background .12s,border-color .12s}
-.sim-btn:hover,.sim-btn.active{background:var(--s2);border-color:var(--b2)}
-.sim-k-item{display:flex;justify-content:space-between;align-items:center;padding:5px 8px;border-radius:6px;background:var(--s2);font-size:11px;margin-bottom:3px}
-.sim-vbar-row{display:flex;align-items:center;gap:7px;margin-bottom:5px;font-size:11px}
-.sim-vbg{flex:1;height:5px;background:var(--s2);border-radius:3px;overflow:hidden}
-.sim-vfill{height:100%;border-radius:3px;transition:width .3s}
-.verdict{padding:8px 12px;border-radius:8px;background:var(--s2);border:1px solid var(--b1);font-size:12px;margin-top:8px}
-.noise-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:11px;color:var(--muted)}
-.an-legend{display:flex;gap:14px;font-size:10px;color:var(--muted);margin-top:7px;flex-wrap:wrap}
-.an-legend span{display:flex;align-items:center;gap:4px}
-.swatch{width:10px;height:10px;border-radius:2px;display:inline-block;flex-shrink:0}
-
-/* ── Mobile backdrop ── */
-#sb-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:199;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
-
-/* ╔══════════════════════════════════════════════════════════════╗
-   ║  RESPONSIVE BREAKPOINTS                                      ║
-   ╚══════════════════════════════════════════════════════════════╝ */
-
-/* ── Large desktop ≥1280px ── */
-@media(min-width:1280px){
-  :root{--sb-w:290px}
-  #view-analytics{padding:var(--sp-xl)}
-  .sb-logo{font-size:20px}
-  #hint-bar{font-size:12px}
-}
-
-/* ── Tablet landscape ≤1024px ── */
-@media(max-width:1024px){
-  :root{--sb-w:248px}
-  .an-g4{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .m-val{font-size:20px}
-  #view-analytics{padding:var(--sp-md);gap:12px}
-}
-
-/* ── Tablet portrait ≤768px: sidebar becomes drawer ── */
-@media(max-width:768px){
-  :root{--sb-w:min(280px,88vw);--tab-h:48px}
-  #sidebar{
-    position:fixed;left:0;top:0;height:100dvh;
-    transform:translateX(calc(-1 * var(--sb-w)));
-    box-shadow:6px 0 40px rgba(0,0,0,.7);
-  }
-  #sidebar.open{transform:translateX(0)}
-  #sb-backdrop.show{display:block}
-  #sb-close{display:block}
-  #menu-btn{display:flex;align-items:center}
-  .an-g2{grid-template-columns:1fr}
-  .an-g4{grid-template-columns:repeat(2,minmax(0,1fr))}
-  #view-analytics{padding:var(--sp-sm);gap:var(--sp-sm)}
-  .an-card{padding:var(--sp-sm)}
-  #acc-overlay{right:8px;bottom:8px;min-width:200px}
-  .ov-conf{font-size:22px}
-}
-
-/* ── Mobile portrait ≤480px ── */
-@media(max-width:480px){
-  :root{--sb-w:92vw;--tab-h:44px}
-  #hint-bar{font-size:10px;gap:6px}
-  .tab{font-size:10px;padding:0 10px;letter-spacing:.04em}
-  .an-g4{grid-template-columns:1fr 1fr}
-  .m-val{font-size:17px}
-  .m-lbl{font-size:9px}
-  #view-analytics{gap:8px;padding:8px}
-  .an-card{padding:10px}
-  .an-ttl{font-size:8px}
-  #acc-overlay{right:6px;bottom:6px;min-width:0;width:calc(100% - 12px);padding:10px 12px 9px}
-  .ov-winner{font-size:14px}
-  .ov-cls{width:62px}
-  .ov-ring{width:40px;height:40px}
-  .ov-ring-val{font-size:9px}
-  .ov-stats{gap:9px}
-}
-
-/* ── Tiny ≤360px ── */
-@media(max-width:360px){
-  .tab{padding:0 7px;font-size:9px}
-  .an-g4{grid-template-columns:1fr}
-  #acc-overlay{font-size:10px}
-  .ov-winner{font-size:13px}
-}
-
-/* ── Short landscape phone ── */
-@media(max-height:500px){
-  :root{--tab-h:38px}
-  #view-canvas{padding:6px;gap:4px}
-  #hint-bar{display:none}
-  #acc-overlay{
-    bottom:6px;right:6px;
-    padding:8px 10px;
-    max-height:calc(100dvh - 60px);
-    overflow-y:auto;
-  }
-  .ov-bars{gap:3px}
-}
-
-/* ── Touch devices ── */
-@media(hover:none){
-  input[type=range]::-webkit-slider-thumb{width:20px;height:20px;margin-top:-8px}
-  .sim-btn,.btn-clear{min-height:40px}
-}
-
-/* ── Retina fine lines ── */
-@media(-webkit-min-device-pixel-ratio:2),(min-resolution:192dpi){
-  #stage-wrap{box-shadow:0 0 0 .5px rgba(167,139,250,.12),0 0 50px rgba(100,60,200,.1),0 16px 60px rgba(0,0,0,.75)}
-}
+button:hover { background: #f0f0f0; }
+button.primary { background: #111; color: #fff; }
+button.primary:hover { background: #333; }
+#pipeline-wrap { width: 100%; overflow-x: auto; }
+#kval-row { display: flex; align-items: center; gap: 10px; font-size: 14px; }
 </style>
 </head>
 <body>
-<div id="app">
 
-<!-- ══════════════════════════ SIDEBAR ══════════════════════════ -->
-<aside id="sidebar">
-  <div class="sb-hd">
-    <div>
-      <div class="sb-logo">Gesture<span>KNN</span></div>
-      <div class="sb-sub">Draw · Classify · Analyze</div>
-    </div>
-    <button id="sb-close" aria-label="Close">✕</button>
-  </div>
-  <div id="sb-body">
+<canvas id="draw" width="300" height="300"></canvas>
 
-    <div class="sb-sec">
-      <div class="sb-lbl">Gesture Library</div>
-      <div class="g-card"><canvas id="prev-Fire" width="40" height="40"></canvas><div><div class="nm" style="color:var(--fire)">🔥 Fire</div><div class="ht">Wavy upward stroke</div></div></div>
-      <div class="g-card"><canvas id="prev-Lightning" width="40" height="40"></canvas><div><div class="nm" style="color:var(--lightning)">⚡ Lightning</div><div class="ht">Sharp zigzag bolt</div></div></div>
-      <div class="g-card"><canvas id="prev-Water" width="40" height="40"></canvas><div><div class="nm" style="color:var(--water)">💧 Water</div><div class="ht">Horizontal wave</div></div></div>
-      <div class="g-card"><canvas id="prev-Wind" width="40" height="40"></canvas><div><div class="nm" style="color:var(--wind)">💨 Wind</div><div class="ht">Smooth arc sweep</div></div></div>
-      <div class="g-card"><canvas id="prev-Portal" width="40" height="40"></canvas><div><div class="nm" style="color:var(--portal)">🔮 Portal</div><div class="ht">Closed circle loop</div></div></div>
-    </div>
+<div class="btn-row">
+  <button class="primary" onclick="analyze()">Classify</button>
+  <button onclick="clearAll()">Clear</button>
+</div>
 
-    <div class="sb-sec">
-      <div class="sb-lbl">K Neighbors</div>
-      <div class="k-row"><span style="font-size:11px;color:var(--muted)">Voting size</span><span class="k-val" id="k-display">3</span></div>
-      <input type="range" id="k-slider" min="1" max="9" value="3" step="1"/>
-      <div class="k-hints"><span>strict — 1</span><span>9 — flexible</span></div>
-    </div>
+<div id="kval-row">
+  <label for="kslider">K =</label>
+  <input type="range" id="kslider" min="1" max="9" step="2" value="3" style="width:120px;">
+  <span id="kval">3</span>
+</div>
 
-    <div class="sb-sec">
-      <div class="sb-lbl">Classification</div>
-      <div class="r-card" id="result-card">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:9px">
-          <span style="font-size:28px;line-height:1;flex-shrink:0" id="r-emoji">✏️</span>
-          <div>
-            <div style="font-size:10px;color:var(--muted);margin-bottom:2px">Classified as</div>
-            <div class="r-name" id="r-name">Draw a gesture</div>
-          </div>
-        </div>
-        <div class="r-meta" id="r-meta">Draw on the canvas to begin</div>
-      </div>
-      <div id="vote-bars" style="margin-top:9px"></div>
-    </div>
-
-    <div class="sb-sec">
-      <div class="sb-lbl">K Nearest Templates</div>
-      <div id="nb-list" style="font-size:11px;color:var(--muted);font-style:italic">—</div>
-    </div>
-
-  </div>
-  <div class="sb-ft">
-    <button class="btn-clear" id="btn-clear">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
-      Clear Drawing
-    </button>
-  </div>
-</aside>
-<div id="sb-backdrop"></div>
-
-<!-- ══════════════════════════ MAIN ══════════════════════════ -->
-<div id="main">
-  <div id="topbar">
-    <button id="menu-btn" aria-label="Open sidebar">☰</button>
-    <div class="tab on" data-tab="canvas">Canvas</div>
-    <div class="tab" data-tab="analytics">Analytics</div>
-  </div>
-
-  <!-- CANVAS VIEW -->
-  <div id="view-canvas">
-    <div id="hint-bar">
-      <span style="color:var(--accent)">✦</span>
-      Draw any gesture — KNN classifies instantly
-      <span id="k-badge">K = 3</span>
-    </div>
-    <div id="canvas-area">
-      <div id="stage-wrap"><div id="stage-container"></div></div>
-
-      <!-- ════════════ LIVE ACCURACY OVERLAY ════════════ -->
-      <div id="acc-overlay">
-        <div class="ov-head">
-          <div>
-            <div class="ov-tag">Classified as</div>
-            <div class="ov-winner" id="ov-winner">—</div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:center">
-            <div class="ov-ring">
-              <svg width="46" height="46" viewBox="0 0 46 46">
-                <circle cx="23" cy="23" r="19" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="3.5"/>
-                <circle id="ov-arc" cx="23" cy="23" r="19" fill="none" stroke="#a78bfa" stroke-width="3.5"
-                  stroke-dasharray="0 120" stroke-linecap="round"/>
-              </svg>
-              <div class="ov-ring-val" id="ov-ring-val">—</div>
-            </div>
-            <div class="ov-conf-tag">Confidence</div>
-          </div>
-        </div>
-        <div class="ov-bars" id="ov-bars"></div>
-        <div class="ov-stats">
-          <div class="ov-stat">Distance: <b id="ov-dist">—</b></div>
-          <div class="ov-stat">Points: <b id="ov-pts">—</b></div>
-          <div class="ov-stat">Vote: <b id="ov-vote">—</b></div>
-          <div class="ov-stat">K: <b id="ov-k">—</b></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ANALYTICS VIEW -->
-  <div id="view-analytics">
-    <div class="an-g4">
-      <div class="m-card"><div class="m-lbl">Overall accuracy</div><div class="m-val" id="m-acc">—</div><div class="m-sub">across 5 classes</div></div>
-      <div class="m-card"><div class="m-lbl">Avg dist (correct)</div><div class="m-val" id="m-dist">—</div><div class="m-sub">lower = confident</div></div>
-      <div class="m-card"><div class="m-lbl">Best class</div><div class="m-val" id="m-best">—</div><div class="m-sub" id="m-best-acc"></div></div>
-      <div class="m-card"><div class="m-lbl">Hardest class</div><div class="m-val" id="m-worst">—</div><div class="m-sub" id="m-worst-acc"></div></div>
-    </div>
-    <div class="an-g2">
-      <div class="an-card">
-        <div class="an-ttl">Per-class accuracy (K=3, 40 tests each)</div>
-        <div id="acc-bars-an"></div>
-      </div>
-      <div class="an-card">
-        <div class="an-ttl">K vs overall accuracy</div>
-        <div class="chart-wrap" style="height:185px"><canvas id="k-chart"></canvas></div>
-        <div style="font-size:10px;color:var(--muted);margin-top:7px">Red dot = current K</div>
-      </div>
-    </div>
-    <div class="an-g2">
-      <div class="an-card">
-        <div class="an-ttl">Confusion matrix — % predicted as →</div>
-        <div style="font-size:9px;color:var(--muted);margin-bottom:8px">Rows = actual · Cols = predicted</div>
-        <div id="cf-wrap"></div>
-      </div>
-      <div class="an-card">
-        <div class="an-ttl">Distance distribution — correct vs wrong</div>
-        <div class="chart-wrap" style="height:185px"><canvas id="dist-chart"></canvas></div>
-        <div class="an-legend" id="dist-legend"></div>
-      </div>
-    </div>
-    <div class="an-card">
-      <div class="an-ttl">Backend pipeline</div>
-      <div class="pipe-wrap" id="pipeline"></div>
-    </div>
-    <div class="an-card">
-      <div class="an-ttl">Live KNN simulator</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px" id="sim-btns"></div>
-      <div class="noise-row">Noise: <input type="range" id="noise-slider" min="1" max="10" value="4" step="1" style="width:100px"/> <span id="noise-val">4</span> <span style="font-size:9px">(higher = harder)</span></div>
-      <div id="sim-output" style="display:none">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px">
-          <div><div style="font-size:10px;color:var(--muted);margin-bottom:6px">K nearest neighbors</div><div id="sim-knn-list"></div></div>
-          <div><div style="font-size:10px;color:var(--muted);margin-bottom:6px">Vote distribution</div><div id="sim-votes"></div></div>
-        </div>
-        <div class="verdict" id="sim-verdict"></div>
-      </div>
-    </div>
-  </div><!-- /view-analytics -->
-</div><!-- /main -->
-</div><!-- /app -->
+<div id="pipeline-wrap">
+  <canvas id="pipeline"></canvas>
+</div>
 
 <script>
-'use strict';
-/* ═══════════════════════════════════════════════
-   CONSTANTS
-═══════════════════════════════════════════════ */
-const CLASSES=['Fire','Lightning','Water','Wind','Portal'];
-const EMOJI  ={Fire:'🔥',Lightning:'⚡',Water:'💧',Wind:'💨',Portal:'🔮'};
-const COLORS ={Fire:'#f97316',Lightning:'#facc15',Water:'#38bdf8',Wind:'#94a3b8',Portal:'#a78bfa'};
-const GLOW   ={Fire:'rgba(249,115,22,.14)',Lightning:'rgba(250,204,21,.14)',Water:'rgba(56,189,248,.14)',Wind:'rgba(148,163,184,.14)',Portal:'rgba(167,139,250,.14)'};
-const BORD   ={Fire:'rgba(249,115,22,.4)',Lightning:'rgba(250,204,21,.4)',Water:'rgba(56,189,248,.4)',Wind:'rgba(148,163,184,.4)',Portal:'rgba(167,139,250,.4)'};
-const CIRC   =2*Math.PI*19; // circumference for ring r=19
+const drawCanvas = document.getElementById("draw");
+const dctx = drawCanvas.getContext("2d");
+const pipe = document.getElementById("pipeline");
+const pctx = pipe.getContext("2d");
+const kslider = document.getElementById("kslider");
+const kvalDisplay = document.getElementById("kval");
+kslider.addEventListener("input", () => { kvalDisplay.textContent = kslider.value; });
 
-/* ═══════════════════════════════════════════════
-   GESTURE GENERATORS
-═══════════════════════════════════════════════ */
-function genFire(v){const a=16+v*1.8,f=2.5+(v%3)*.55,o=(v-3.5)*4,p=[];for(let i=0;i<=60;i++){const t=i/60;p.push([50+o+Math.sin(t*Math.PI*f)*a,90-t*80]);}return p;}
-function genLightning(v){const o=(v-3.5)*3,s=.86+v*.04,k=[[50,5],[74,28],[42,44],[76,60],[44,76],[72,95]],p=[];for(let i=0;i<k.length-1;i++){const[x0,y0]=k[i],[x1,y1]=k[i+1];for(let j=0;j<=10;j++){const t=j/10;p.push([(x0+t*(x1-x0))*s+o,(y0+t*(y1-y0))*s+(1-s)*50]);}}return p;}
-function genWater(v){const a=12+(v%4)*5,f=2+Math.floor(v/4),yb=50+(v-3.5)*4,p=[];for(let i=0;i<=60;i++){const t=i/60;p.push([5+t*90,yb+Math.sin(t*Math.PI*f*2)*a]);}return p;}
-function genWind(v){const a=10+(v%4)*4,yb=50+(v-3.5)*8,p=[];for(let i=0;i<=60;i++){const t=i/60;p.push([5+t*90,yb-Math.sin(t*Math.PI)*a]);}return p;}
-function genPortal(v){const cx=50+(v-3.5)*2,cy=50+(v-3.5)*2,r=26+(v%4)*6,p=[];for(let i=0;i<=72;i++){const θ=(i/72)*Math.PI*2;p.push([cx+Math.cos(θ)*r,cy+Math.sin(θ)*r]);}return p;}
-const GEN={Fire:genFire,Lightning:genLightning,Water:genWater,Wind:genWind,Portal:genPortal};
+let drawing = false;
+let points = [];
 
-/* ═══════════════════════════════════════════════
-   PRE-PROCESSING
-═══════════════════════════════════════════════ */
-function normalize(pts){
-  if(!pts.length)return pts;
-  const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);
-  const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
-  const sc=Math.max(maxX-minX,maxY-minY)||1,cx=(minX+maxX)/2,cy=(minY+maxY)/2;
-  return pts.map(([x,y])=>[(x-cx)/sc*100,(y-cy)/sc*100]);
+function getPos(e, canvas) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: (e.clientX - rect.left) * (canvas.width / rect.width),
+    y: (e.clientY - rect.top) * (canvas.height / rect.height)
+  };
 }
-function resample(pts,n=32){
-  if(pts.length<2)return Array(n).fill(pts[0]??[0,0]);
-  const cum=[0];
-  for(let i=1;i<pts.length;i++){const dx=pts[i][0]-pts[i-1][0],dy=pts[i][1]-pts[i-1][1];cum.push(cum[i-1]+Math.sqrt(dx*dx+dy*dy));}
-  const total=cum[cum.length-1];if(!total)return Array(n).fill(pts[0]);
-  const r=[];
-  for(let j=0;j<n;j++){
-    const t=(j/(n-1))*total;let lo=0,hi=pts.length-1;
-    while(hi-lo>1){const m=(lo+hi)>>1;if(cum[m]<=t)lo=m;else hi=m;}
-    const sl=cum[hi]-cum[lo],tf=sl>0?(t-cum[lo])/sl:0;
-    r.push([pts[lo][0]+tf*(pts[hi][0]-pts[lo][0]),pts[lo][1]+tf*(pts[hi][1]-pts[lo][1])]);
+drawCanvas.addEventListener("mousedown", e => { drawing = true; pushPt(getPos(e, drawCanvas)); });
+drawCanvas.addEventListener("mouseup", () => drawing = false);
+drawCanvas.addEventListener("mouseleave", () => drawing = false);
+drawCanvas.addEventListener("mousemove", e => { if (!drawing) return; pushPt(getPos(e, drawCanvas)); });
+drawCanvas.addEventListener("touchstart", e => { e.preventDefault(); drawing = true; pushPt(getPos(e.touches[0], drawCanvas)); }, { passive: false });
+drawCanvas.addEventListener("touchend", () => drawing = false);
+drawCanvas.addEventListener("touchmove", e => { e.preventDefault(); if (!drawing) return; pushPt(getPos(e.touches[0], drawCanvas)); }, { passive: false });
+
+function pushPt(p) {
+  points.push(p);
+  dctx.fillStyle = "#111";
+  dctx.fillRect(p.x - 1.5, p.y - 1.5, 3, 3);
+}
+
+function clearAll() {
+  dctx.clearRect(0, 0, 300, 300);
+  pctx.clearRect(0, 0, pipe.width, pipe.height);
+  points = [];
+}
+
+const PAD = 16;
+const N = 120;
+
+function normalize(pts, size) {
+  const range = size - PAD * 2;
+  const minX = Math.min(...pts.map(p => p.x));
+  const maxX = Math.max(...pts.map(p => p.x));
+  const minY = Math.min(...pts.map(p => p.y));
+  const maxY = Math.max(...pts.map(p => p.y));
+  const w = maxX - minX || 1, h = maxY - minY || 1;
+  const scale = range / Math.max(w, h);
+  const offX = PAD + (range - w * scale) / 2;
+  const offY = PAD + (range - h * scale) / 2;
+  return pts.map(p => ({ x: (p.x - minX) * scale + offX, y: (p.y - minY) * scale + offY }));
+}
+
+function resample(pts, n) {
+  if (pts.length < 2) return pts;
+  let total = 0;
+  for (let i = 1; i < pts.length; i++) {
+    const dx = pts[i].x - pts[i-1].x, dy = pts[i].y - pts[i-1].y;
+    total += Math.sqrt(dx*dx + dy*dy);
   }
-  return r;
-}
-
-/* ═══════════════════════════════════════════════
-   TRAINING DATA  (8 × 5 = 40 templates)
-═══════════════════════════════════════════════ */
-const training=[];
-for(const[lbl,gen]of Object.entries(GEN))
-  for(let v=0;v<8;v++)
-    training.push({label:lbl,points:resample(normalize(gen(v)),32)});
-
-/* ═══════════════════════════════════════════════
-   KNN ENGINE
-═══════════════════════════════════════════════ */
-function euclidean(a,b){let s=0;for(let i=0;i<a.length;i++){const dx=b[i][0]-a[i][0],dy=b[i][1]-a[i][1];s+=dx*dx+dy*dy;}return Math.sqrt(s);}
-function knn(qPts,k){
-  const ranked=training.map(s=>({sample:s,dist:euclidean(qPts,s.points)}));
-  ranked.sort((a,b)=>a.dist-b.dist);
-  const nearest=ranked.slice(0,k),tally={};
-  for(const{sample}of nearest)tally[sample.label]=(tally[sample.label]||0)+1;
-  let win=null,mx=0;
-  for(const[l,c]of Object.entries(tally))if(c>mx){mx=c;win=l;}
-  return{winner:win,tally,nearest,allRanked:ranked};
-}
-
-/* ═══════════════════════════════════════════════
-   CANVAS — sized via ResizeObserver
-═══════════════════════════════════════════════ */
-let K=3,stage=null,bgL=null,drawL=null,uiL=null;
-let currentPts=[],isDrawing=false;
-let cW=0,cH=0;
-
-function measureCanvas(){
-  /* The available area for the canvas is the #view-canvas container
-     minus the hint bar height and padding.  We read real computed
-     dimensions so every breakpoint is handled automatically.        */
-  const vc  = document.getElementById('view-canvas');
-  const hb  = document.getElementById('hint-bar');
-  const vcR = vc.getBoundingClientRect();
-  const hbH = hb.getBoundingClientRect().height;
-  const padV= 14*2; // --sp-md top+bottom padding on view-canvas
-  const gapV= 10;   // gap between hint-bar and canvas-area
-  const availW = vcR.width  - 28; // 14px each side
-  const availH = vcR.height - hbH - padV - gapV - 8;
-  cW = Math.max(200, Math.min(availW, 1100));
-  cH = Math.max(150, Math.min(availH,  680));
-  return{w:cW,h:cH};
-}
-
-function initStage(){
-  const{w,h}=measureCanvas();
-  if(stage){
-    if(stage.width()===w&&stage.height()===h)return; // no-op if unchanged
-    stage.width(w);stage.height(h);
-    bgL.destroyChildren();drawBG();bgL.draw();
-    drawL.destroyChildren();drawL.draw();
-    uiL.destroyChildren();showHint();
-    return;
+  const interval = total / (n - 1);
+  const result = [pts[0]];
+  let acc = 0;
+  for (let i = 1; i < pts.length; i++) {
+    const dx = pts[i].x - pts[i-1].x, dy = pts[i].y - pts[i-1].y;
+    const d = Math.sqrt(dx*dx + dy*dy);
+    if (acc + d >= interval) {
+      const t = (interval - acc) / d;
+      result.push({ x: pts[i-1].x + dx*t, y: pts[i-1].y + dy*t });
+      acc = 0;
+      if (result.length >= n) break;
+    } else { acc += d; }
   }
-  stage=new Konva.Stage({container:'stage-container',width:w,height:h});
-  bgL=new Konva.Layer();drawL=new Konva.Layer();uiL=new Konva.Layer();
-  stage.add(bgL,drawL,uiL);
-  drawBG();showHint();
-
-  stage.on('mousedown touchstart',()=>{
-    isDrawing=true;currentPts=[];
-    drawL.destroyChildren();drawL.draw();
-    uiL.destroyChildren();uiL.draw();
-    hideOverlay();
-    const p=stage.getPointerPosition();if(p)currentPts.push([p.x,p.y]);
-  });
-  stage.on('mousemove touchmove',e=>{
-    if(!isDrawing)return;e.evt.preventDefault?.();
-    const p=stage.getPointerPosition();if(!p)return;
-    currentPts.push([p.x,p.y]);
-    renderStroke('#e2e8f0',2.8,8,.3);
-  });
-  stage.on('mouseup touchend',()=>{if(!isDrawing)return;isDrawing=false;processDrawing();});
-  stage.on('mouseleave',()=>{if(isDrawing){isDrawing=false;if(currentPts.length>=8)processDrawing();}});
+  while (result.length < n) result.push(pts[pts.length-1]);
+  return result;
 }
 
-function drawBG(){
-  bgL.add(new Konva.Rect({x:0,y:0,width:cW,height:cH,fill:'#070d1a'}));
-  const S='rgba(20,30,50,.85)';
-  for(let x=50;x<cW;x+=50)bgL.add(new Konva.Line({points:[x,0,x,cH],stroke:S,strokeWidth:1}));
-  for(let y=50;y<cH;y+=50)bgL.add(new Konva.Line({points:[0,y,cW,y],stroke:S,strokeWidth:1}));
-  bgL.draw();
-}
-function showHint(){
-  uiL.destroyChildren();
-  const fs=Math.min(22,cW/18);
-  uiL.add(new Konva.Text({x:cW/2-210,y:cH/2-20,width:420,align:'center',text:'Draw a gesture here',fontSize:fs,fontFamily:'Syne,sans-serif',fill:'rgba(90,96,128,.44)'}));
-  uiL.add(new Konva.Text({x:cW/2-210,y:cH/2+fs,width:420,align:'center',text:'Try a wavy stroke 🔥, zigzag ⚡, or loop 🔮',fontSize:Math.min(12,cW/40),fontFamily:'DM Mono,monospace',fill:'rgba(90,96,128,.27)'}));
-  uiL.draw();
-}
-function renderStroke(color,w,blur,gop){
-  drawL.destroyChildren();
-  if(currentPts.length<2){drawL.draw();return;}
-  const flat=currentPts.flat();
-  drawL.add(new Konva.Line({points:flat,lineCap:'round',lineJoin:'round',tension:.2,stroke:color,strokeWidth:w+6,opacity:.1}));
-  drawL.add(new Konva.Line({points:flat,lineCap:'round',lineJoin:'round',tension:.2,stroke:color,strokeWidth:w,shadowColor:color,shadowBlur:blur,shadowOpacity:gop}));
-  drawL.add(new Konva.Circle({x:currentPts[0][0],y:currentPts[0][1],radius:5,fill:'#22c55e',shadowColor:'#22c55e',shadowBlur:10,shadowOpacity:.8}));
-  const last=currentPts[currentPts.length-1];
-  drawL.add(new Konva.Circle({x:last[0],y:last[1],radius:4,fill:color,shadowColor:color,shadowBlur:8,shadowOpacity:.6}));
-  drawL.draw();
-}
-
-/* ═══════════════════════════════════════════════
-   PROCESS DRAWING
-═══════════════════════════════════════════════ */
-function processDrawing(){
-  if(currentPts.length<8){showHint();return;}
-  const normed  =normalize(currentPts);
-  const resampled=resample(normed,32);
-  const res     =knn(resampled,K);
-
-  renderStroke(COLORS[res.winner],3.5,18,.7);
-
-  // Stage pill (top-left corner)
-  uiL.destroyChildren();
-  const pW=130,pH=34,px=12,py=12;
-  uiL.add(new Konva.Rect({x:px,y:py,width:pW,height:pH,fill:'rgba(7,13,26,.92)',cornerRadius:10,stroke:BORD[res.winner],strokeWidth:1,shadowColor:COLORS[res.winner],shadowBlur:14,shadowOpacity:.5}));
-  uiL.add(new Konva.Text({x:px,y:py,width:pW,height:pH,align:'center',verticalAlign:'middle',text:`${EMOJI[res.winner]} ${res.winner}`,fontSize:14,fontStyle:'bold',fontFamily:'Syne,sans-serif',fill:COLORS[res.winner]}));
-  uiL.draw();
-
-  showAccuracyOverlay(res,resampled);
-  updateSidebar(res);
-}
-
-/* ═══════════════════════════════════════════════
-   LIVE ACCURACY OVERLAY
-   Shown immediately after every stroke.
-
-   Confidence is computed two ways and blended:
-   1. Vote share  — fraction of K votes for winner
-   2. Distance gap — how much closer the nearest
-      template is vs the mean template distance
-═══════════════════════════════════════════════ */
-function showAccuracyOverlay(res,resampled){
-  const{winner,tally,nearest,allRanked}=res;
-  const total=nearest.length;
-
-  // ── Per-class soft probability (distance-weighted over ALL templates) ──
-  const scores={};for(const c of CLASSES)scores[c]=0;
-  for(const{sample,dist}of allRanked)scores[sample.label]+=1/(dist+0.001);
-  const sumS=Object.values(scores).reduce((a,b)=>a+b,0);
-  for(const c of CLASSES)scores[c]/=sumS;
-
-  // ── Blended confidence ──
-  const voteConf=(tally[winner]||0)/total;
-  const nearestDist=nearest[0].dist;
-  const allDists=allRanked.map(r=>r.dist);
-  const meanDist=allDists.reduce((a,b)=>a+b,0)/allDists.length;
-  const distConf=Math.max(0,Math.min(1,1-nearestDist/meanDist+0.5));
-  const confidence=Math.round((voteConf*0.6+distConf*0.4)*100);
-
-  const color=COLORS[winner];
-
-  // Winner label
-  const wEl=document.getElementById('ov-winner');
-  wEl.textContent=`${EMOJI[winner]} ${winner}`;
-  wEl.style.color=color;
-
-  // Confidence ring
-  const arc=(confidence/100)*CIRC;
-  const arcEl=document.getElementById('ov-arc');
-  arcEl.setAttribute('stroke',color);
-  arcEl.setAttribute('stroke-dasharray',`${arc} ${CIRC-arc}`);
-  const rvEl=document.getElementById('ov-ring-val');
-  rvEl.textContent=confidence+'%';
-  rvEl.style.color=color;
-
-  // Per-class probability bars (sorted by probability desc)
-  const sorted=CLASSES.slice().sort((a,b)=>scores[b]-scores[a]);
-  const barsEl=document.getElementById('ov-bars');
-  barsEl.innerHTML='';
-  for(const cls of sorted){
-    const pct=Math.round(scores[cls]*100);
-    const isW=(cls===winner);
-    const row=document.createElement('div');
-    row.className='ov-row';
-    row.innerHTML=`
-      <span class="ov-cls${isW?' w':''}" style="color:${isW?COLORS[cls]:'var(--muted)'}">${EMOJI[cls]} ${cls}</span>
-      <div class="ov-bg"><div class="ov-fill" style="width:0%;background:${COLORS[cls]}"></div></div>
-      <span class="ov-pct" style="color:${isW?COLORS[cls]:'var(--muted)'}">${pct}%</span>`;
-    barsEl.appendChild(row);
-    // Double-raf so CSS transition fires after paint
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{
-      row.querySelector('.ov-fill').style.width=pct+'%';
-    }));
+function nearestDist(a, b) {
+  let total = 0;
+  for (let i = 0; i < a.length; i++) {
+    let best = Infinity;
+    for (let j = 0; j < b.length; j++) {
+      const dx = a[i].x - b[j].x, dy = a[i].y - b[j].y;
+      const d = dx*dx + dy*dy;
+      if (d < best) best = d;
+    }
+    total += Math.sqrt(best);
   }
-
-  // Stats
-  document.getElementById('ov-dist').textContent=nearestDist.toFixed(1);
-  document.getElementById('ov-pts').textContent=currentPts.length;
-  document.getElementById('ov-k').textContent=K;
-  document.getElementById('ov-vote').textContent=`${tally[winner]||0}/${total}`;
-
-  // Overlay styling
-  const ov=document.getElementById('acc-overlay');
-  ov.style.borderColor=BORD[winner];
-  ov.style.boxShadow=`0 0 22px ${GLOW[winner]}`;
-  ov.classList.add('visible');
+  return total / a.length;
 }
 
-function hideOverlay(){
-  const ov=document.getElementById('acc-overlay');
-  ov.classList.remove('visible');
-  ov.style.borderColor='';ov.style.boxShadow='';
-}
-
-/* ═══════════════════════════════════════════════
-   SIDEBAR UPDATE
-═══════════════════════════════════════════════ */
-function updateSidebar(res){
-  const{winner,tally,nearest}=res;
-  const card=document.getElementById('result-card');
-  card.style.background=GLOW[winner];card.style.borderColor=BORD[winner];card.style.boxShadow=`0 0 24px ${GLOW[winner]}`;
-  document.getElementById('r-emoji').textContent=EMOJI[winner];
-  const rn=document.getElementById('r-name');rn.textContent=winner;rn.style.color=COLORS[winner];
-  document.getElementById('r-meta').textContent=`Majority vote · ${nearest.length} templates`;
-  const vEl=document.getElementById('vote-bars');vEl.innerHTML='';
-  for(const[lbl,cnt]of Object.entries(tally)){
-    const pct=Math.round(cnt/K*100);
-    const row=document.createElement('div');row.className='vrow';
-    row.innerHTML=`<span style="width:18px;text-align:center;font-size:13px">${EMOJI[lbl]}</span>
-      <div class="vbg"><div class="vfill" style="width:${pct}%;background:${COLORS[lbl]}"></div></div>
-      <span style="width:14px;text-align:right;font-size:11px;font-weight:700;color:${COLORS[lbl]}">${cnt}</span>`;
-    vEl.appendChild(row);
-  }
-  const nbEl=document.getElementById('nb-list');nbEl.innerHTML='';
-  nearest.forEach(({sample,dist},i)=>{
-    const row=document.createElement('div');row.className='nb-item';
-    row.innerHTML=`<span class="nb-rank">#${i+1}</span>
-      <span style="font-size:13px">${EMOJI[sample.label]}</span>
-      <span style="color:${COLORS[sample.label]};font-size:11px;font-weight:700;flex:1">${sample.label}</span>
-      <canvas id="nb-${i}" width="32" height="32" style="border-radius:4px;background:#080b18;flex-shrink:0"></canvas>
-      <span style="color:var(--muted);font-size:10px;width:32px;text-align:right">${dist.toFixed(1)}</span>`;
-    nbEl.appendChild(row);
-    setTimeout(()=>drawMini(`nb-${i}`,sample.points,COLORS[sample.label]),0);
-  });
-}
-
-/* ═══════════════════════════════════════════════
-   MINI STROKE HELPER
-═══════════════════════════════════════════════ */
-function drawMini(id,pts,color){
-  const c=document.getElementById(id);if(!c)return;
-  const ctx=c.getContext('2d'),W=c.width,H=c.height,P=4;
-  ctx.clearRect(0,0,W,H);ctx.strokeStyle=color;ctx.lineWidth=1.4;
-  ctx.lineCap='round';ctx.lineJoin='round';ctx.shadowColor=color;ctx.shadowBlur=4;
-  ctx.beginPath();
-  pts.forEach(([x,y],i)=>{
-    const px=(x/100+.5)*(W-2*P)+P,py=(y/100+.5)*(H-2*P)+P;
-    i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
-  });
-  ctx.stroke();
-}
-function renderPreviews(){
-  for(const cls of CLASSES){
-    const s=training.find(d=>d.label===cls);
-    if(s)setTimeout(()=>drawMini(`prev-${cls}`,s.points,COLORS[cls]),0);
-  }
-}
-
-/* ═══════════════════════════════════════════════
-   RESPONSIVE CANVAS via ResizeObserver
-═══════════════════════════════════════════════ */
-let _rszT=null;
-const ro=new ResizeObserver(()=>{
-  clearTimeout(_rszT);
-  _rszT=setTimeout(()=>{
-    if(document.getElementById('view-canvas').offsetParent!==null)initStage();
-  },60);
-});
-
-/* ═══════════════════════════════════════════════
-   TABS
-═══════════════════════════════════════════════ */
-let analyticsReady=false;
-document.querySelectorAll('.tab').forEach(tab=>{
-  tab.addEventListener('click',()=>{
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
-    tab.classList.add('on');
-    const t=tab.dataset.tab;
-    document.getElementById('view-canvas').style.display   =t==='canvas'   ?'flex':'none';
-    document.getElementById('view-analytics').style.display=t==='analytics'?'flex':'none';
-    if(t==='analytics'&&!analyticsReady){buildAnalytics();analyticsReady=true;}
-    if(t==='canvas')requestAnimationFrame(()=>initStage());
-  });
-});
-
-/* ═══════════════════════════════════════════════
-   CONTROLS
-═══════════════════════════════════════════════ */
-document.getElementById('k-slider').addEventListener('input',e=>{
-  K=parseInt(e.target.value);
-  document.getElementById('k-display').textContent=K;
-  document.getElementById('k-badge').textContent=`K = ${K}`;
-});
-document.getElementById('btn-clear').addEventListener('click',()=>{
-  currentPts=[];
-  if(drawL){drawL.destroyChildren();drawL.draw();}
-  showHint();hideOverlay();
-  const card=document.getElementById('result-card');
-  card.style.background=card.style.borderColor=card.style.boxShadow='';
-  document.getElementById('r-emoji').textContent='✏️';
-  const rn=document.getElementById('r-name');rn.textContent='Draw a gesture';rn.style.color='var(--muted)';
-  document.getElementById('r-meta').textContent='Draw on the canvas to begin';
-  document.getElementById('vote-bars').innerHTML='';
-  document.getElementById('nb-list').innerHTML='<span style="color:var(--muted);font-style:italic">—</span>';
-});
-function openSb(){document.getElementById('sidebar').classList.add('open');document.getElementById('sb-backdrop').classList.add('show');}
-function closeSb(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-backdrop').classList.remove('show');}
-document.getElementById('menu-btn').addEventListener('click',openSb);
-document.getElementById('sb-close').addEventListener('click',closeSb);
-document.getElementById('sb-backdrop').addEventListener('click',closeSb);
-
-/* ═══════════════════════════════════════════════
-   ANALYTICS
-═══════════════════════════════════════════════ */
-function addNoise(pts,s){return pts.map(([x,y])=>[x+(Math.random()-.5)*s*100,y+(Math.random()-.5)*s*100]);}
-function simulateAccuracy(k,n=40,ns=.07){
-  const res={};
-  for(const cls of CLASSES){let c=0;for(let i=0;i<n;i++){const q=addNoise(resample(normalize(GEN[cls]((8+i)%16)),32),ns+Math.random()*.04);if(knn(q,k).winner===cls)c++;}res[cls]=c/n;}
-  return res;
-}
-function buildConfusion(k=3,n=20){
-  const mat={},dc=[],dw=[];
-  for(const c of CLASSES){mat[c]={};for(const d of CLASSES)mat[c][d]=0;}
-  for(const cls of CLASSES)for(let i=0;i<n;i++){
-    const q=addNoise(resample(normalize(GEN[cls]((10+i)%16)),32),.08);
-    const{winner,nearest}=knn(q,k);
-    mat[cls][winner]=(mat[cls][winner]||0)+1;
-    const d=nearest[0].dist;(winner===cls?dc:dw).push(d);
-  }
-  return{mat,dc,dw};
-}
-let kCI=null,dCI=null;
-function buildAnalytics(){
-  const K3=simulateAccuracy(3);
-  const ov=Object.values(K3).reduce((a,b)=>a+b,0)/CLASSES.length;
-  document.getElementById('m-acc').textContent=(ov*100).toFixed(1)+'%';
-  let ds=0,dn=0;
-  for(const cls of CLASSES){const q=resample(normalize(GEN[cls](0)),32);const{nearest,winner}=knn(q,3);if(winner===cls){ds+=nearest[0].dist;dn++;}}
-  document.getElementById('m-dist').textContent=dn?(ds/dn).toFixed(1):'—';
-  const s=[...CLASSES].sort((a,b)=>K3[b]-K3[a]);
-  const best=s[0],worst=s[s.length-1];
-  document.getElementById('m-best').textContent=EMOJI[best]+' '+best;
-  document.getElementById('m-best-acc').textContent=(K3[best]*100).toFixed(0)+'% accuracy';
-  document.getElementById('m-worst').textContent=EMOJI[worst]+' '+worst;
-  document.getElementById('m-worst-acc').textContent=(K3[worst]*100).toFixed(0)+'% accuracy';
-
-  const ab=document.getElementById('acc-bars-an');ab.innerHTML='';
-  for(const cls of CLASSES){
-    const pct=Math.round(K3[cls]*100);
-    const row=document.createElement('div');row.className='a-acc-row';
-    row.innerHTML=`<span style="width:90px;font-size:11px;color:${COLORS[cls]}">${EMOJI[cls]} ${cls}</span>
-      <div class="a-acc-bg"><div class="a-acc-fill" style="width:0%;background:${COLORS[cls]}"></div></div>
-      <span style="width:34px;text-align:right;font-size:11px;font-weight:700;color:${COLORS[cls]}">${pct}%</span>`;
-    ab.appendChild(row);
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{row.querySelector('.a-acc-fill').style.width=pct+'%';}));
-  }
-
-  const kVals=[1,2,3,4,5,6,7,8,9];
-  const kAccs=kVals.map(k=>{const r=simulateAccuracy(k,20,.07);return Math.round(Object.values(r).reduce((a,b)=>a+b,0)/CLASSES.length*100);});
-  if(kCI)kCI.destroy();
-  kCI=new Chart(document.getElementById('k-chart'),{
-    type:'line',
-    data:{labels:kVals.map(k=>'K='+k),datasets:[{data:kAccs,borderColor:'#a78bfa',backgroundColor:'rgba(167,139,250,.07)',tension:.35,fill:true,
-      pointRadius:kVals.map(k=>k===K?7:3),
-      pointBackgroundColor:kVals.map(k=>k===K?'#ef4444':'#a78bfa'),
-      pointBorderColor:kVals.map(k=>k===K?'#ef4444':'#a78bfa')}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y+'%'}}},
-      scales:{y:{min:50,max:100,grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#5a6080',font:{size:10},callback:v=>v+'%'}},
-              x:{grid:{display:false},ticks:{color:'#5a6080',font:{size:10}}}}}
-  });
-
-  const{mat,dc,dw}=buildConfusion(3,20);
-  let cf=`<div style="display:grid;grid-template-columns:36px repeat(5,1fr);gap:2px;margin-bottom:3px;font-size:9px;color:var(--muted)"><span></span>`;
-  for(const c of CLASSES)cf+=`<span style="text-align:center">${EMOJI[c]}</span>`;cf+='</div>';
-  for(const actual of CLASSES){
-    cf+=`<div style="display:grid;grid-template-columns:36px repeat(5,1fr);gap:2px;margin-bottom:2px"><span style="font-size:10px;color:var(--muted);display:flex;align-items:center">${EMOJI[actual]}</span>`;
-    const tot=Object.values(mat[actual]).reduce((a,b)=>a+b,0)||1;
-    for(const pred of CLASSES){const cnt=mat[actual][pred]||0,pct=Math.round(cnt/tot*100),diag=actual===pred;cf+=`<div class="cf-cell" style="background:${diag?COLORS[actual]:`rgba(255,255,255,${pct>0?Math.max(.04,pct/100*.22):0})`};color:${diag?'#fff':'rgba(255,255,255,.75)'}">${pct}</div>`;}
-    cf+='</div>';
-  }
-  document.getElementById('cf-wrap').innerHTML=cf;
-
-  function bkt(arr,bins=12){if(!arr.length)return{labels:[],counts:[]};const mn=Math.min(...arr),mx=Math.max(...arr),st=(mx-mn)/bins,L=[],C=[];for(let i=0;i<bins;i++){L.push((mn+i*st).toFixed(0));C.push(0);}for(const v of arr){C[Math.min(Math.floor((v-mn)/st),bins-1)]++;}return{labels:L,counts:C};}
-  const bc=bkt(dc),bw2=bkt(dw);
-  if(dCI)dCI.destroy();
-  dCI=new Chart(document.getElementById('dist-chart'),{
-    type:'bar',
-    data:{labels:bc.labels,datasets:[
-      {label:'Correct',data:bc.counts,backgroundColor:'rgba(56,189,248,.45)',borderColor:'#38bdf8',borderWidth:1},
-      {label:'Wrong',  data:bw2.counts,backgroundColor:'rgba(249,115,22,.45)',borderColor:'#f97316',borderWidth:1}
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-      scales:{x:{grid:{display:false},ticks:{color:'#5a6080',font:{size:9}},title:{display:true,text:'Euclidean distance',color:'#5a6080',font:{size:9}}},
-              y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#5a6080',font:{size:9}},title:{display:true,text:'Count',color:'#5a6080',font:{size:9}}}}}
-  });
-  document.getElementById('dist-legend').innerHTML=
-    `<span><span class="swatch" style="background:#38bdf8"></span>Correct</span>
-     <span><span class="swatch" style="background:#f97316"></span>Wrong</span>`;
-
-  const steps=[
-    {n:'Raw points',d:'x,y pixel coords',c:'#3b82f6',i:'●●●'},
-    {n:'Normalize',d:'scale & center invariant',c:'#8b5cf6',i:'⊞'},
-    {n:'Resample',d:'32 arc-uniform pts',c:'#a78bfa',i:'≈≈≈'},
-    {n:'64-dim vec',d:'feature space ℝ⁶⁴',c:'#06b6d4',i:'[v]'},
-    {n:'Euclidean',d:'dist vs 40 templates',c:'#f97316',i:'d(·)'},
-    {n:'Sort & K',d:`top ${K} neighbors`,c:'#facc15',i:'↑↓'},
-    {n:'Vote',d:'label + confidence',c:'#22c55e',i:'✓'},
+// --- Template generators (size = canvas cell size) ---
+function makeTriangle(size, variant) {
+  const r = size - PAD * 2, cx = size / 2;
+  const variants = [
+    // equilateral
+    [{ x: cx, y: PAD }, { x: PAD, y: PAD+r }, { x: PAD+r, y: PAD+r }, { x: cx, y: PAD }],
+    // right
+    [{ x: PAD, y: PAD }, { x: PAD, y: PAD+r }, { x: PAD+r, y: PAD+r }, { x: PAD, y: PAD }],
+    // wide
+    [{ x: cx, y: PAD+r*0.2 }, { x: PAD, y: PAD+r }, { x: PAD+r, y: PAD+r }, { x: cx, y: PAD+r*0.2 }],
+    // tall isosceles
+    [{ x: cx, y: PAD }, { x: cx-r*0.3, y: PAD+r }, { x: cx+r*0.3, y: PAD+r }, { x: cx, y: PAD }],
+    // left-leaning
+    [{ x: PAD+r*0.2, y: PAD }, { x: PAD, y: PAD+r }, { x: PAD+r, y: PAD+r }, { x: PAD+r*0.2, y: PAD }],
   ];
-  const pl=document.getElementById('pipeline');pl.innerHTML='';
-  steps.forEach((s,i)=>{
-    const d=document.createElement('div');d.className='pipe-step';
-    d.innerHTML=`<div class="pipe-box" style="background:${s.c}18;border-color:${s.c}44;color:${s.c}"><div class="pipe-ico">${s.i}</div>${s.n}</div><div class="pipe-desc">${s.d}</div>`;
-    pl.appendChild(d);
-    if(i<steps.length-1){const a=document.createElement('div');a.className='pipe-arr';a.textContent='→';pl.appendChild(a);}
-  });
-
-  const sb=document.getElementById('sim-btns');sb.innerHTML='';
-  CLASSES.forEach(cls=>{
-    const btn=document.createElement('button');btn.className='sim-btn';btn.textContent=`${EMOJI[cls]} ${cls}`;
-    btn.onclick=()=>{document.querySelectorAll('.sim-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');runSim(cls);};
-    sb.appendChild(btn);
-  });
+  const corners = variants[variant % variants.length];
+  const pts = [];
+  for (let i = 0; i < corners.length - 1; i++) {
+    for (let s = 0; s < 60; s++) {
+      const t = s / 60;
+      pts.push({ x: corners[i].x + (corners[i+1].x - corners[i].x)*t, y: corners[i].y + (corners[i+1].y - corners[i].y)*t });
+    }
+  }
+  return pts;
 }
 
-document.getElementById('noise-slider').addEventListener('input',e=>{document.getElementById('noise-val').textContent=e.target.value;});
-
-function runSim(cls){
-  const ns=parseInt(document.getElementById('noise-slider').value)/100;
-  const q=addNoise(resample(normalize(GEN[cls](Math.floor(Math.random()*16))),32),ns+Math.random()*.04);
-  const{winner,tally,nearest}=knn(q,K);
-  document.getElementById('sim-output').style.display='block';
-  const kl=document.getElementById('sim-knn-list');kl.innerHTML='';
-  nearest.forEach(({sample,dist},i)=>{const d=document.createElement('div');d.className='sim-k-item';d.innerHTML=`<span style="color:var(--muted);font-size:10px">#${i+1}</span><span style="color:${COLORS[sample.label]}">${EMOJI[sample.label]} ${sample.label}</span><span style="color:var(--muted);font-size:10px">${dist.toFixed(1)}</span>`;kl.appendChild(d);});
-  const vEl=document.getElementById('sim-votes');vEl.innerHTML='';
-  for(const[lbl,cnt]of Object.entries(tally)){const pct=Math.round(cnt/K*100);const row=document.createElement('div');row.className='sim-vbar-row';row.innerHTML=`<span style="width:76px;color:${COLORS[lbl]}">${EMOJI[lbl]} ${lbl}</span><div class="sim-vbg"><div class="sim-vfill" style="width:${pct}%;background:${COLORS[lbl]}"></div></div><span style="width:14px;text-align:right;color:${COLORS[lbl]};font-weight:700">${cnt}</span>`;vEl.appendChild(row);}
-  const ok=winner===cls;
-  document.getElementById('sim-verdict').innerHTML=`<span style="color:${ok?'#22c55e':'#ef4444'};font-weight:700">${ok?'✓':'✗'} ${EMOJI[cls]} ${cls} → ${EMOJI[winner]} ${winner}</span><span style="color:var(--muted);font-size:10px;margin-left:8px">${ok?'Correct':'Misclassification'}</span>`;
+function makeSquare(size, variant) {
+  const r = size - PAD * 2;
+  const variants = [
+    // normal square
+    [{ x: PAD, y: PAD }, { x: PAD+r, y: PAD }, { x: PAD+r, y: PAD+r }, { x: PAD, y: PAD+r }, { x: PAD, y: PAD }],
+    // wide rect
+    [{ x: PAD, y: PAD+r*0.2 }, { x: PAD+r, y: PAD+r*0.2 }, { x: PAD+r, y: PAD+r*0.8 }, { x: PAD, y: PAD+r*0.8 }, { x: PAD, y: PAD+r*0.2 }],
+    // tall rect
+    [{ x: PAD+r*0.2, y: PAD }, { x: PAD+r*0.8, y: PAD }, { x: PAD+r*0.8, y: PAD+r }, { x: PAD+r*0.2, y: PAD+r }, { x: PAD+r*0.2, y: PAD }],
+    // smaller square centered
+    [{ x: PAD+r*0.1, y: PAD+r*0.1 }, { x: PAD+r*0.9, y: PAD+r*0.1 }, { x: PAD+r*0.9, y: PAD+r*0.9 }, { x: PAD+r*0.1, y: PAD+r*0.9 }, { x: PAD+r*0.1, y: PAD+r*0.1 }],
+    // slightly rotated feel (diamond)
+    [{ x: size/2, y: PAD }, { x: PAD+r, y: size/2 }, { x: size/2, y: PAD+r }, { x: PAD, y: size/2 }, { x: size/2, y: PAD }],
+  ];
+  const corners = variants[variant % variants.length];
+  const pts = [];
+  for (let i = 0; i < corners.length - 1; i++) {
+    for (let s = 0; s < 60; s++) {
+      const t = s / 60;
+      pts.push({ x: corners[i].x + (corners[i+1].x - corners[i].x)*t, y: corners[i].y + (corners[i+1].y - corners[i].y)*t });
+    }
+  }
+  return pts;
 }
 
-/* ═══════════════════════════════════════════════
-   INIT
-═══════════════════════════════════════════════ */
-window.addEventListener('DOMContentLoaded',()=>{
-  renderPreviews();
-  initStage();
-  ro.observe(document.getElementById('view-canvas'));
-});
+function makeCircle(size, variant) {
+  const cx = size / 2, cy = size / 2;
+  const radii = [
+    (size - PAD * 2) / 2,
+    (size - PAD * 2) / 2 * 0.85,
+    (size - PAD * 2) / 2 * 0.7,
+  ];
+  const offsets = [[0,0],[0,0],[PAD*0.3, -PAD*0.2]];
+  const rx = radii[variant % radii.length];
+  const ry = [rx, rx * 0.85, rx][variant % 3];
+  const ox = offsets[variant % offsets.length][0];
+  const oy2 = offsets[variant % offsets.length][1];
+  const pts = [];
+  const steps = 180;
+  for (let s = 0; s <= steps; s++) {
+    const angle = (s / steps) * Math.PI * 2;
+    pts.push({ x: cx + ox + Math.cos(angle) * rx, y: cy + oy2 + Math.sin(angle) * ry });
+  }
+  return pts;
+}
+
+// Build training set: { label, pts }[]
+function buildTrainingSet(size) {
+  const training = [];
+  for (let v = 0; v < 5; v++) training.push({ label: "triangle", pts: resample(makeTriangle(size, v), N) });
+  for (let v = 0; v < 5; v++) training.push({ label: "square",   pts: resample(makeSquare(size, v), N) });
+  for (let v = 0; v < 3; v++) training.push({ label: "circle",   pts: resample(makeCircle(size, v), N) });
+  return training;
+}
+
+// KNN classify
+function knnClassify(query, training, k) {
+  const dists = training.map(t => ({ label: t.label, dist: nearestDist(query, t.pts) }));
+  dists.sort((a, b) => a.dist - b.dist);
+  const neighbors = dists.slice(0, k);
+  const votes = {};
+  neighbors.forEach(n => { votes[n.label] = (votes[n.label] || 0) + 1; });
+  const winner = Object.entries(votes).sort((a,b) => b[1]-a[1])[0][0];
+  return { winner, neighbors, votes, dists };
+}
+
+const SHAPE_COLORS = { triangle: "#2563eb", square: "#d97706", circle: "#dc2626" };
+
+function drawDots(ctx, pts, ox, oy, color, sz) {
+  ctx.fillStyle = color;
+  sz = sz || 2.5;
+  pts.forEach(p => ctx.fillRect(ox + p.x - sz/2, oy + p.y - sz/2, sz, sz));
+}
+
+function drawArrow(ctx, x1, y1, x2, y2) {
+  const headLen = 8, angle = Math.atan2(y2-y1, x2-x1);
+  ctx.strokeStyle = "#bbb"; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  ctx.fillStyle = "#bbb";
+  ctx.beginPath();
+  ctx.moveTo(x2,y2);
+  ctx.lineTo(x2 - headLen*Math.cos(angle-0.4), y2 - headLen*Math.sin(angle-0.4));
+  ctx.lineTo(x2 - headLen*Math.cos(angle+0.4), y2 - headLen*Math.sin(angle+0.4));
+  ctx.closePath(); ctx.fill();
+}
+
+function analyze() {
+  if (points.length < 10) { alert("Draw something first!"); return; }
+
+  const K = parseInt(kslider.value);
+  const availW = Math.max((document.getElementById("pipeline-wrap").clientWidth || window.innerWidth) - 32, 500);
+  const STEPS = 5;
+  const ARR_W = 28;
+  const CSIZE = Math.floor((availW - ARR_W * (STEPS - 1)) / STEPS);
+  const TOTAL_W = STEPS * CSIZE + ARR_W * (STEPS - 1);
+  const LABH = 20; const SUBLABH = 16;
+  const BOT_H = 100;
+  const TOTAL_H = LABH + SUBLABH + CSIZE + BOT_H;
+
+  pipe.width = TOTAL_W;
+  pipe.height = TOTAL_H;
+  pctx.clearRect(0, 0, TOTAL_W, TOTAL_H);
+
+  const normPts   = resample(normalize(points, CSIZE), N);
+  const training  = buildTrainingSet(CSIZE);
+  const { winner, neighbors, votes, dists } = knnClassify(normPts, training, K);
+
+  const winnerColor = SHAPE_COLORS[winner];
+
+  const stepX = i => i * (CSIZE + ARR_W);
+  const ROW_Y = LABH + SUBLABH;
+  const fs = Math.max(10, Math.min(13, CSIZE / 13));
+
+  const stepLabels = [
+    { label: "Input", sub: "raw strokes" },
+    { label: "Normalize", sub: "scale + center" },
+    { label: "Compare to all", sub: training.length + " templates" },
+    { label: "K nearest (K="+K+")", sub: "vote!" },
+    { label: "Output", sub: "" },
+  ];
+
+  // draw step headers + boxes + arrows
+  stepLabels.forEach((s, i) => {
+    const ox = stepX(i), oy = ROW_Y;
+    pctx.fillStyle = "#111"; pctx.font = `500 ${fs}px Arial`; pctx.textAlign = "center";
+    pctx.fillText(s.label, ox + CSIZE/2, fs + 2);
+    pctx.fillStyle = "#999"; pctx.font = `${fs-1}px Arial`;
+    pctx.fillText(s.sub, ox + CSIZE/2, LABH + fs);
+    pctx.strokeStyle = "#e5e5e5"; pctx.lineWidth = 1;
+    pctx.strokeRect(ox + 0.5, oy + 0.5, CSIZE, CSIZE);
+    if (i < stepLabels.length - 1) drawArrow(pctx, ox+CSIZE+4, oy+CSIZE/2, ox+CSIZE+ARR_W-4, oy+CSIZE/2);
+  });
+
+  // Step 1 — Input
+  drawDots(pctx, normalize(points, CSIZE), stepX(0), ROW_Y, "#111");
+
+  // Step 2 — Normalize
+  {
+    const ox = stepX(1), oy = ROW_Y;
+    pctx.strokeStyle = "#eee"; pctx.lineWidth = 0.5;
+    pctx.setLineDash([4,4]);
+    pctx.strokeRect(ox+PAD, oy+PAD, CSIZE-PAD*2, CSIZE-PAD*2);
+    pctx.setLineDash([]);
+    drawDots(pctx, normPts, ox, oy, "#2563eb");
+  }
+
+  // Step 3 — Compare: draw all template shapes faintly, user on top
+  {
+    const ox = stepX(2), oy = ROW_Y;
+    training.forEach(t => {
+      pctx.globalAlpha = 0.18;
+      drawDots(pctx, t.pts, ox, oy, SHAPE_COLORS[t.label], 2);
+    });
+    pctx.globalAlpha = 1;
+    drawDots(pctx, normPts, ox, oy, "#111", 3);
+  }
+
+  // Step 4 — K nearest: show K neighbors + distances
+  {
+    const ox = stepX(3), oy = ROW_Y;
+    const itemH = Math.min((CSIZE - 8) / K, 22);
+    neighbors.forEach((n, i) => {
+      const y = oy + 6 + i * itemH;
+      const barMaxW = CSIZE - 12;
+      const maxDist = dists[dists.length-1].dist || 1;
+      const barW = (1 - n.dist / maxDist) * barMaxW;
+      pctx.fillStyle = SHAPE_COLORS[n.label];
+      pctx.globalAlpha = 0.2;
+      pctx.fillRect(ox + 6, y, barW, itemH - 3);
+      pctx.globalAlpha = 1;
+      pctx.fillStyle = SHAPE_COLORS[n.label];
+      pctx.font = `${Math.max(9, itemH * 0.55)}px Arial`;
+      pctx.textAlign = "left";
+      pctx.fillText("#"+(i+1)+" "+n.label+" ("+n.dist.toFixed(1)+")", ox + 8, y + itemH * 0.7);
+    });
+    pctx.textAlign = "center";
+  }
+
+  // Step 5 — Output
+  {
+    const ox = stepX(4), oy = ROW_Y;
+    pctx.strokeStyle = winnerColor; pctx.lineWidth = 2;
+    pctx.strokeRect(ox + 2, oy + 2, CSIZE - 4, CSIZE - 4);
+
+    const totalVotes = Object.values(votes).reduce((a,b)=>a+b,0);
+    const barH = 14, barGap = 6;
+    const labels = ["triangle","square","circle"];
+    const barY0 = oy + (CSIZE - labels.length*(barH+barGap)) / 2;
+    labels.forEach((lbl, i) => {
+      const v = votes[lbl] || 0;
+      const bw = Math.max(2, ((v / totalVotes) * (CSIZE - PAD*2)));
+      const by = barY0 + i*(barH+barGap);
+      pctx.fillStyle = "#f0f0f0";
+      pctx.fillRect(ox+PAD, by, CSIZE-PAD*2, barH);
+      pctx.fillStyle = SHAPE_COLORS[lbl];
+      pctx.fillRect(ox+PAD, by, bw, barH);
+      pctx.fillStyle = "#111"; pctx.font = `${fs-1}px Arial`; pctx.textAlign = "left";
+      pctx.fillText(lbl+" ("+v+")", ox+PAD+4, by+barH-3);
+    });
+
+    pctx.fillStyle = winnerColor;
+    pctx.font = `500 ${Math.round(fs*1.3)}px Arial`;
+    pctx.textAlign = "center";
+    pctx.fillText("It's a " + winner + "!", ox + CSIZE/2, oy + CSIZE + 28);
+    pctx.fillStyle = "#999"; pctx.font = `${fs-1}px Arial`;
+    pctx.fillText("K="+K+" | "+Object.entries(votes).map(([k,v])=>k+":"+v).join(", "), ox+CSIZE/2, oy+CSIZE+46);
+  }
+}
 </script>
 </body>
 </html>
