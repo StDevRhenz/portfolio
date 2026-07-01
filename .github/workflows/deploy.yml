@@ -26,9 +26,11 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+        working-directory: ./client
 
-      - name: Build project
+      - name: Build
         run: npm run build
+        working-directory: ./client
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
@@ -36,7 +38,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist
+          path: ./client/dist
 
       - name: Deploy
         id: deployment
